@@ -21,8 +21,9 @@ var EventEmitter = require('events').EventEmitter,
 function getPageProperties() {
   return {
     site: {
-      title: "Patrick's Album",
-      css: [ config.httpPrefix + "/css/main.css" ]
+      title: config.siteTitle,
+      css: [ config.httpPrefix + "/css/main.css" ],
+      main: config.httpPrefix + "/"
     }
   }
 }

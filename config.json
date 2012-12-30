@@ -1,4 +1,5 @@
 {
+  "siteTitle"      : "Patrick's Album",
   "inputDir"       : "/input",
   "outputDir"      : "/output",
   "templateDir"    : "/templates",

@@ -7,6 +7,7 @@ var inputDir = __dirname + '/input';
 var outputDir = __dirname + '/output';
 var albumFileName = 'album.json';
 var imageSizes = [2000, 1000];
+var errorLog = [];
 
 // Load all subdirectories from inputDir.
 function fetchAlbumPath() {
@@ -169,6 +170,9 @@ function generatePhoto(originalPhoto, title, desc) {
     newName = "photo-" + sha1.digest('hex');
     photoDir = outputDir + '/' + newName;
     createPhotoDir();
+  });
+  stream.on('error', function(err) {
+    e.emit('error', err);
   });
 
   return e;

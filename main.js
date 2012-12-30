@@ -1,23 +1,19 @@
-var fs = require('fs'),
-    crypto = require('crypto'),
-    mkdirp = require('mkdirp'),
-    _ = require('underscore'),
-    ii = require('./imagemagick-interface.js');
-var EventEmitter = require('events').EventEmitter;
-var inputDir = __dirname + '/input';
-var outputDir = __dirname + '/output';
-var templateDir = __dirname + '/templates';
-var albumFileName = 'album.json';
-var httpPrefix = "";
-var thumbnailName = "150.jpg";
-var imageSizes = [150, 2000, 1000];
+var fs                  = require('fs'),
+    crypto              = require('crypto'),
+    EventEmitter        = require('events').EventEmitter;
+    mkdirp              = require('mkdirp'),
+    _                   = require('underscore'),
+    ii                  = require('./imagemagick-interface.js');
+
+// Error Log
 var errorLog = [];
+var config = null;
 
 // Load all subdirectories from inputDir.
 function fetchAlbumPath() {
   var e = new EventEmitter();
 
-  fs.readdir(inputDir, function(err, files) {
+  fs.readdir(config.inputDir, function(err, files) {
     if (err) {
       e.emit('error', err);
       return;
@@ -34,7 +30,7 @@ function fetchAlbumPath() {
     };
 
     files.forEach(function(file) {
-      var filePath = inputDir + '/' + file;
+      var filePath = config.inputDir + '/' + file;
       waitingStat++;
       fs.lstat(filePath, function(err, stat) {
         if (err || !stat.isDirectory()) {
@@ -44,7 +40,7 @@ function fetchAlbumPath() {
 
         // If the path is a directory, we will need to check if there's a
         // configure file in it.
-        fs.lstat(filePath + '/' + albumFileName, function(err, stat) {
+        fs.lstat(filePath + '/' + config.albumFileName, function(err, stat) {
           if (stat && stat.isFile()) {
             dirList.push(filePath);
           }
@@ -64,7 +60,7 @@ function generatePage(templateName, data) {
   if (cached) {
     setTimeout(e.emit.bind(e, 'ok', cached(data)), 0);
   } else {
-    fs.readFile(templateDir + "/" + templateName, 'utf8', function(err, d) {
+    fs.readFile(config.templateDir + "/" + templateName, 'utf8', function(err, d) {
       if (err) {
         e.emit('error', err);
         return;
@@ -163,7 +159,7 @@ function generatePhoto(originalPhoto, title, desc) {
 
       // Right now we have a folder for the picture, we will create shrunk
       // version and web page and place them into this folder.
-      var shrinking = shrink(imageSizes);
+      var shrinking = shrink(config.imageSizes);
       shrinking.on('ok', function() {
         getExif();
       });
@@ -186,7 +182,7 @@ function generatePhoto(originalPhoto, title, desc) {
   });
   stream.on('end', function() {
     newName = "photo-" + sha1.digest('hex');
-    photoDir = outputDir + '/' + newName;
+    photoDir = config.outputDir + '/' + newName;
     createPhotoDir();
   });
   stream.on('error', function(err) {
@@ -243,7 +239,7 @@ function generateAlbum(albumPath) {
     });
   }
 
-  fs.readFile(albumPath + '/' + albumFileName, 'utf8', function(err, data) {
+  fs.readFile(albumPath + '/' + config.albumFileName, 'utf8', function(err, data) {
     if (err) {
       e.emit('error', err);
       return;
@@ -259,7 +255,7 @@ function getAlbumFileName(albumInfo) {
 }
 
 function getAlbumUrl(albumInfo) {
-  return httpPrefix + "/" + getAlbumFileName(albumInfo);
+  return config.httpPrefix + "/" + getAlbumFileName(albumInfo);
 }
 
 function generateAlbumListPage(albumList) {
@@ -267,7 +263,7 @@ function generateAlbumListPage(albumList) {
 
   var generating = generatePage('album-list.html', {albums: albumList});
   generating.on('ok', function(page) {
-    fs.writeFile(outputDir + '/index.html', page, function(err) {
+    fs.writeFile(config.outputDir + '/index.html', page, function(err) {
       if (err) {
         e.emit('error', err);
       } else {
@@ -287,8 +283,8 @@ function generateAlbumListForRendering(list) {
     var listForRendering = [];
     list.forEach(function(p) {
       listForRendering.push({
-        thumbnailUrl: httpPrefix + "/" + p.file + "/" + thumbnailName,
-        pageUrl: httpPrefix + "/" + p.file + "/",
+        thumbnailUrl: config.httpPrefix + "/" + p.file + "/" + config.thumbnailName,
+        pageUrl: config.httpPrefix + "/" + p.file + "/",
         title: p.title,
         desc: p.desc
       });
@@ -299,7 +295,7 @@ function generateAlbumListForRendering(list) {
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
-      cover: httpPrefix + "/" + a.cover + "/" + thumbnailName,
+      cover: config.httpPrefix + "/" + a.cover + "/" + config.thumbnailName,
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos),
@@ -315,7 +311,7 @@ function generateAlbumPage(albumInfo) {
   var generating = generatePage('album.html', {album: albumInfo}),
       e = new EventEmitter();
   generating.on('ok', function(page) {
-    fs.writeFile(outputDir + '/' + albumInfo.albumPageName, page, function(err) {
+    fs.writeFile(config.outputDir + '/' + albumInfo.albumPageName, page, function(err) {
       if (err) {
         e.emit('error', err);
       } else {
@@ -370,7 +366,7 @@ function generateAlbumPages(albumList) {
 
 function run() {
   var ee = fetchAlbumPath();
-  mkdirp.sync(outputDir);
+  mkdirp.sync(config.outputDir);
 
   ee.on('ok', function(list) {
     console.log("File list: " + JSON.stringify(list));
@@ -403,4 +399,13 @@ function run() {
   });
 }
 
-run();
+var loadingConfig = require('./config.js').load();
+
+loadingConfig.on('ok', function(conf) {
+  config = conf;
+  run();
+});
+
+loadingConfig.on('error', function(err) {
+  console.error('Fail to load configure: ' + err);
+});

@@ -1,3 +1,15 @@
-<h1><%= title %></h1>
+<h2><%= title %></h2>
 <img src="1000.jpg" />
 <%= desc %>
+<% if (exif) { %>
+  <h2>Exif</h2>
+<%
+   Object.keys(exif).forEach(function (exifEntry) {
+     var exifVal = exif[exifEntry];
+%>
+     <div style="exif">
+       <%= exifEntry %> - <%= exifVal %>
+     </div>
+<% })
+  }
+%>

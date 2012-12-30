@@ -283,13 +283,26 @@ function generateAlbumListPage(albumList) {
 }
 
 function generateAlbumListForRendering(list) {
+  function generatePhotoListForRendering(list) {
+    var listForRendering = [];
+    list.forEach(function(p) {
+      listForRendering.push({
+        thumbnailUrl: httpPrefix + "/" + p.file + "/" + thumbnailName,
+        pageUrl: httpPrefix + "/" + p.file + "/",
+        title: p.title,
+        desc: p.desc
+      });
+    });
+    return listForRendering;
+  };
+
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
       cover: httpPrefix + "/" + a.cover + "/" + thumbnailName,
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
-      photos: a.photos,
+      photos: generatePhotoListForRendering(a.photos),
       title: a.title,
       desc: a.desc
     });

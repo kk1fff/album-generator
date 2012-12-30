@@ -5,6 +5,7 @@ var fs = require('fs'),
 var EventEmitter = require('events').EventEmitter;
 var inputDir = __dirname + '/input';
 var outputDir = __dirname + '/output';
+var templateDir = __dirname + '/template';
 var albumFileName = 'album.json';
 var imageSizes = [2000, 1000];
 var errorLog = [];
@@ -183,13 +184,6 @@ function generateAlbum(albumPath) {
   var e = new EventEmitter();
 
   function loadAlbum(albumConfig) {
-    // Produce title.
-    if (albumConfig.title) {
-      realAlbum.title = albumConfig.title;
-    } else {
-      realAlbum.title = albumPath;
-    }
-
     // Process photos:
     //  1. Generate new file name of the photo, "photo-" and the sha1 hash of
     //     original photo file plus title and desc.
@@ -198,6 +192,7 @@ function generateAlbum(albumPath) {
     //     album info.
     realAlbum.photos = [];
     var processingPhoto = 0;
+    var nameMap = [];
 
     function onProcessedOnePhoto(success, photo, newName) {
       processingPhoto--;
@@ -208,13 +203,20 @@ function generateAlbum(albumPath) {
           desc: photo.desc,
         });
       }
-      if (processingPhoto == 0) e.emit('ok', realAlbum);
+      if (processingPhoto == 0) {
+        // Finalize album info.
+        realAlbum.title = albumConfig.title || albumPath;
+        realAlbum.desc = albumConfig.desc;
+        realAlbum.cover = nameMap[albumConfig.cover || 0];
+        e.emit('ok', realAlbum);
+      }
     }
 
-    albumConfig.photos.forEach(function(photo) {
+    albumConfig.photos.forEach(function(photo, i) {
       processingPhoto++;
       var ee = generatePhoto(albumPath + '/' + photo.file, photo.title, photo.desc);
       ee.on('ok', function(newName) {
+        nameMap[i] = newName;
         onProcessedOnePhoto(true, photo, newName);
       });
       ee.on('error', function(err) {
@@ -235,8 +237,13 @@ function generateAlbum(albumPath) {
   return e;
 };
 
+function generateAlbumListPage(albumList) {
+
+}
+
 function generateAlbumPage(albumList) {
-  console.log("Album: " + JSON.stringify(albumList));
+  console.log("Album list: " + JSON.stringify(albumList));
+  generateAlbumListPage(albumList);
 }
 
 function run() {

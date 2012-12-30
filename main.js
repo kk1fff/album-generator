@@ -1,11 +1,12 @@
 var fs = require('fs'),
     crypto = require('crypto'),
     mkdirp = require('mkdirp'),
+    _ = require('underscore'),
     ii = require('./imagemagick-interface.js');
 var EventEmitter = require('events').EventEmitter;
 var inputDir = __dirname + '/input';
 var outputDir = __dirname + '/output';
-var templateDir = __dirname + '/template';
+var templateDir = __dirname + '/templates';
 var albumFileName = 'album.json';
 var imageSizes = [2000, 1000];
 var errorLog = [];
@@ -54,9 +55,23 @@ function fetchAlbumPath() {
   return e;
 };
 
+var cachedTemplate = {};
 function generatePage(templateName, data) {
   var e = new EventEmitter();
-  setTimeout(e.emit.bind(e, 'ok', JSON.stringify(data)), 0);
+  var cached = cachedTemplate[templateName];
+  if (cached) {
+    setTimeout(e.emit.bind(e, 'ok', cached(data)), 0);
+  } else {
+    fs.readFile(templateDir + "/" + templateName, 'utf8', function(err, d) {
+      if (err) {
+        e.emit('error', err);
+        return;
+      }
+      cached = _.template(d);
+      cachedTemplate[templateName] = cached;
+      e.emit('ok', cached(data));
+    });
+  }
   return e;
 }
 

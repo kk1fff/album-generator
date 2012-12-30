@@ -1,0 +1,19 @@
+html {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0 auto;
+    max-width: 1000px;
+}
+
+header {
+    display: block;
+    background-color: black;
+    color: white;
+}
+
+.photo-row {
+    vertical-align: middle;
+}

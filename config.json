@@ -3,6 +3,7 @@
   "outputDir"      : "/output",
   "templateDir"    : "/templates",
   "pagePartDir"    : "/pageparts",
+  "cssSourceDir"   : "/css",
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "150.jpg",

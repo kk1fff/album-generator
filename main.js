@@ -311,11 +311,11 @@ function generateAlbumListForRendering(list) {
 function generateAlbumPage(albumInfo) {
   console.log("Album Info: " + JSON.stringify(albumInfo));
   var generating = generatePage('album.html', {
-    album: albumInfo,
-    page: {
-      title: albumInfo.title
-    }
-  }),
+        album: albumInfo,
+        page: {
+           title: albumInfo.title
+        }
+      }),
       e = new EventEmitter();
   generating.on('ok', function(page) {
     fs.writeFile(config.outputDir + '/' + albumInfo.albumPageName, page, function(err) {
@@ -371,10 +371,76 @@ function generateAlbumPages(albumList) {
   return e;
 }
 
-function run() {
-  var ee = fetchAlbumPath();
-  mkdirp.sync(config.outputDir);
+function deployCss() {
+  var e = new EventEmitter(),
+      deployingFile = 0;
 
+  function onDeployedOneFile() {
+    deployingFile--;
+    if (deployingFile == 0) {
+      e.emit('ok');
+    }
+  }
+
+  mkdirp.sync(config.outputDir + '/css');
+
+  fs.readdir(config.cssSourceDir, function(err, csses) {
+    if (err) {
+      e.emit('error', err);
+    } else {
+      // 1. Read css sourece dir for all css file.
+      // 2. For each entry, test if it is a regular file. If so, we assume it is a css file.
+      // 3. For each file, read its content.
+      // 4. Write its content into output directory.
+      csses.forEach(function(cssFile) {
+        deployingFile++;
+        var file = config.cssSourceDir + "/" + cssFile;
+        fs.lstat(file, function(err, stat) {
+          if (stat.isFile()) {
+            fs.readFile(file, 'utf8', function(err, data) {
+              fs.writeFile(config.outputDir + "/css/" + cssFile, data, function(err) {
+                if (err) {
+                  e.emit('error', err);
+                  onDeployedOneFile();
+                } else {
+                  onDeployedOneFile();
+                }
+              });
+            });
+          }
+        });
+      });
+    }
+  });
+
+  return e;
+}
+
+function prepareDirectory() {
+  var e = new EventEmitter();
+
+
+  mkdirp(config.outputDir, function(err) {
+    if (err) {
+      e.emit('error', err);
+    } else {
+      var ee = deployCss();
+      ee.on('ok', function() {
+        e.emit('ok');
+      });
+
+      ee.on('error', function(err) {
+        e.emit('error', err);
+      });
+    }
+  });
+
+  return e;
+}
+
+function processAlbums() {
+  var ee;
+  ee = fetchAlbumPath();
   ee.on('ok', function(list) {
     console.log("File list: " + JSON.stringify(list));
     var albumList = [];
@@ -403,6 +469,16 @@ function run() {
         onProcessedOneAlbum();
       });
     });
+  });
+}
+
+function run() {
+  var ee = prepareDirectory();
+  ee.on('ok', function() {
+    processAlbums();
+  });
+  ee.on('error', function(err) {
+    console.log('Error when preparing environment: ' + err);
   });
 }
 

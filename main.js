@@ -2,8 +2,8 @@ var fs                  = require('fs'),
     crypto              = require('crypto'),
     EventEmitter        = require('events').EventEmitter;
     mkdirp              = require('mkdirp'),
-    _                   = require('underscore'),
-    ii                  = require('./imagemagick-interface.js');
+    ii                  = require('./imagemagick-interface.js'),
+    generatePage        = require('./template-interface.js').generatePage;
 
 // Error Log
 var errorLog = [];
@@ -52,26 +52,6 @@ function fetchAlbumPath() {
 
   return e;
 };
-
-var cachedTemplate = {};
-function generatePage(templateName, data) {
-  var e = new EventEmitter();
-  var cached = cachedTemplate[templateName];
-  if (cached) {
-    setTimeout(e.emit.bind(e, 'ok', cached(data)), 0);
-  } else {
-    fs.readFile(config.templateDir + "/" + templateName, 'utf8', function(err, d) {
-      if (err) {
-        e.emit('error', err);
-        return;
-      }
-      cached = _.template(d);
-      cachedTemplate[templateName] = cached;
-      e.emit('ok', cached(data));
-    });
-  }
-  return e;
-}
 
 //  1. Create a folder in output dir, with the name is the new photo name.
 //  2. Resize the photo into the photo folder.

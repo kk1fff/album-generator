@@ -8,7 +8,9 @@ var inputDir = __dirname + '/input';
 var outputDir = __dirname + '/output';
 var templateDir = __dirname + '/templates';
 var albumFileName = 'album.json';
-var imageSizes = [2000, 1000];
+var httpPrefix = "";
+var thumbnailName = "150.jpg";
+var imageSizes = [150, 2000, 1000];
 var errorLog = [];
 
 // Load all subdirectories from inputDir.
@@ -252,13 +254,105 @@ function generateAlbum(albumPath) {
   return e;
 };
 
-function generateAlbumListPage(albumList) {
-
+function getAlbumFileName(albumInfo) {
+  return 'album-' + albumInfo.index + '.html';
 }
 
-function generateAlbumPage(albumList) {
+function getAlbumUrl(albumInfo) {
+  return httpPrefix + "/" + getAlbumFileName(albumInfo);
+}
+
+function generateAlbumListPage(albumList) {
+  var e = new EventEmitter();
+
+  var generating = generatePage('album-list.html', {albums: albumList});
+  generating.on('ok', function(page) {
+    fs.writeFile(outputDir + '/index.html', page, function(err) {
+      if (err) {
+        e.emit('error', err);
+      } else {
+        e.emit('ok');
+      }
+    });
+  });
+  generating.on('error', function(e) {
+    e.emit('error', err);
+  });
+
+  return e;
+}
+
+function generateAlbumListForRendering(list) {
+  var listForRendering = [];
+  list.forEach(function(a) {
+    listForRendering.push({
+      cover: httpPrefix + "/" + a.cover + "/" + thumbnailName,
+      albumUrl: getAlbumUrl(a),
+      albumPageName: getAlbumFileName(a),
+      photos: a.photos,
+      title: a.title,
+      desc: a.desc
+    });
+  });
+  return listForRendering;
+}
+
+function generateAlbumPage(albumInfo) {
+  console.log("Album Info: " + JSON.stringify(albumInfo));
+  var generating = generatePage('album.html', {album: albumInfo}),
+      e = new EventEmitter();
+  generating.on('ok', function(page) {
+    fs.writeFile(outputDir + '/' + albumInfo.albumPageName, page, function(err) {
+      if (err) {
+        e.emit('error', err);
+      } else {
+        e.emit('ok');
+      }
+    });
+  });
+  generating.on('error', function(e) {
+    e.emit('error', err);
+  });
+
+  return e;
+}
+
+function generateAlbumPages(albumList) {
   console.log("Album list: " + JSON.stringify(albumList));
-  generateAlbumListPage(albumList);
+  var list = generateAlbumListForRendering(albumList),
+      e = new EventEmitter(),
+      generating = 0,
+      generatingAlbumList = generateAlbumListPage(list);
+
+  function onAlbumPageGenerated() {
+    generating--;
+    if (generating == 0) {
+      e.emit('ok');
+    }
+  }
+
+  generating++;
+  generatingAlbumList.on('ok', function() {
+    onAlbumPageGenerated();
+  });
+  generatingAlbumList.on('error', function(err) {
+    e.emit('error', err);
+    onAlbumPageGenerated();
+  });
+
+  list.forEach(function(a) {
+    generating++;
+    var ee = generateAlbumPage(a);
+    ee.on('ok', function() {
+      onAlbumPageGenerated();
+    });
+    ee.on('error', function(err) {
+      e.emit('error', err);
+      onAlbumPageGenerated();
+    });
+  });
+  
+  return e;
 }
 
 function run() {
@@ -273,14 +367,18 @@ function run() {
     function onProcessedOneAlbum() {
       pendingAlbum--;
       if (pendingAlbum == 0) {
-        generateAlbumPage(albumList);
+        var ee = generateAlbumPages(albumList);
+        ee.on('ok', function() {
+          console.log("done");
+        });
       }
     }
 
-    list.forEach(function(p) {
+    list.forEach(function(p, i) {
       pendingAlbum++;
       var ee = generateAlbum(p);
       ee.on('ok', function(album) {
+        album.index = i;
         albumList.push(album);
         onProcessedOneAlbum();
       });

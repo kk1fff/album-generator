@@ -7,6 +7,7 @@ function modifyConfig(data) {
     inputDir: __dirname + data.inputDir,
     outputDir: __dirname + data.outputDir,
     templateDir: __dirname + data.templateDir,
+    pagePartDir: __dirname + data.pagePartDir,
     albumFileName: data.albumFileName,
     httpPrefix: data.httpPrefix,
     thumbnailName: data.thumbnailName,

@@ -62,7 +62,10 @@ function generatePhoto(originalPhoto, title, desc) {
   var photoDir;
   var photoInfo = {
     title: title,
-    desc: desc
+    desc: desc,
+    page: {
+      title: title
+    }
   };
   var newName = null;
 
@@ -241,7 +244,12 @@ function getAlbumUrl(albumInfo) {
 function generateAlbumListPage(albumList) {
   var e = new EventEmitter();
 
-  var generating = generatePage('album-list.html', {albums: albumList});
+  var generating = generatePage('album-list.html', {
+    albums: albumList,
+    page: {
+      title: "Album List"
+    }
+  });
   generating.on('ok', function(page) {
     fs.writeFile(config.outputDir + '/index.html', page, function(err) {
       if (err) {
@@ -288,7 +296,12 @@ function generateAlbumListForRendering(list) {
 
 function generateAlbumPage(albumInfo) {
   console.log("Album Info: " + JSON.stringify(albumInfo));
-  var generating = generatePage('album.html', {album: albumInfo}),
+  var generating = generatePage('album.html', {
+    album: albumInfo,
+    page: {
+      title: albumInfo.title
+    }
+  }),
       e = new EventEmitter();
   generating.on('ok', function(page) {
     fs.writeFile(config.outputDir + '/' + albumInfo.albumPageName, page, function(err) {

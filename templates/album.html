@@ -1,14 +1,8 @@
-<html>
-<head>
-<title>Album: <%= album.title %></title>
-</head>
-<body>
-  <h1><%= album.title %></h1>
-  <% if (album.desc) { %><p><%= album.desc %></p><% } %>
-  <% album.photos.forEach(function(p) { %>
-  <div>
-    <% print('<a href="' + p.pageUrl + '"><img src="' + p.thumbnailUrl + '"/></a>'); %>
-  </div>
-  <% }); %>
-</body>
-</html>
+<h1><%= album.title %></h1>
+<% if (album.desc) { %><p><%= album.desc %></p><% } %>
+<% album.photos.forEach(function(p) { %>
+<div>
+  <% print('<a href="' + p.pageUrl + '"><img src="' + p.thumbnailUrl + '"/></a>'); %>
+</div>
+<% }); %>
+

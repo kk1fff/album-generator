@@ -2,6 +2,7 @@
   "inputDir"       : "/input",
   "outputDir"      : "/output",
   "templateDir"    : "/templates",
+  "pagePartDir"    : "/pageparts",
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "150.jpg",

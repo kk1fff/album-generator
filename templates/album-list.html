@@ -1,10 +1,6 @@
-<html>
-<head><title>Album List</title></head>
-<body>
-  <% albums.forEach(function(a) { %><h2 class="photo-title"><%= a.title %></h2>
-  <div class="album-info-box">
-    <% print('<a href="' + a.albumUrl + '"><img src="' + a.cover + '" /></a>'); %></div>
-    <div class="photonumber"><%= a.photos.length %></div>
-  </div><% }) %>
-</body>
-</html>
+<% albums.forEach(function(a) { %><h2 class="photo-title"><%= a.title %></h2>
+<div class="album-info-box">
+  <% print('<a href="' + a.albumUrl + '"><img src="' + a.cover + '" /></a>'); %></div>
+<div class="photonumber"><%= a.photos.length %></div>
+</div><% }) %>
+

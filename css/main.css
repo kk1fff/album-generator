@@ -8,17 +8,42 @@ body {
     max-width: 1000px;
 }
 
+a, a:visited {
+    color: blue;
+    text-decoration: none;
+}
+
 header {
     display: block;
     background-color: black;
     color: white;
 }
 
-header a {
+header a, header a:visited {
     color: white;
     text-decoration: none;
 }
 
 .photo-row {
     vertical-align: middle;
+}
+
+.album-list-cover {
+    float: left;
+    display: block;
+    vertical-align: middle;
+}
+
+.album-list-item {
+    width: 100%;
+}
+
+.album-list-item:hover {
+    background-color: #f0f0ff;
+    cursor: pointer;
+}
+
+.album-list-item .image-cell {
+    width: 170px;
+    text-align: center;
 }

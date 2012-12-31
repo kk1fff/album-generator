@@ -5,6 +5,7 @@
   "templateDir"    : "/templates",
   "pagePartDir"    : "/pageparts",
   "cssSourceDir"   : "/css",
+  "jsSourceDir"    : "/clientjs",
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "150.jpg",

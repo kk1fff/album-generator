@@ -1,9 +1,13 @@
 <html>
 <head>
   <title><%= page.title %> - <%= site.title %></title>
+  <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
   <%
      site.css.forEach(function (css) {
      print('<link rel="stylesheet" type="text/css" href="' + css + '">');
+     });
+     site.js.forEach(function (js) {
+     print('<script type="application/javascript" src="' + js + '"></script>');
      });
   %>
 </head>

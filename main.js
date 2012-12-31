@@ -426,22 +426,81 @@ function deployCss() {
   return e;
 }
 
+function deployJs() {
+  var e = new EventEmitter(),
+      deployingFile = 0;
+
+  function onDeployedOneFile() {
+    deployingFile--;
+    if (deployingFile == 0) {
+      e.emit('ok');
+    }
+  }
+
+  mkdirp.sync(config.outputDir + '/js');
+
+  fs.readdir(config.jsSourceDir, function(err, jses) {
+    if (err) {
+      e.emit('error', err);
+    } else {
+      // 1. Read css sourece dir for all js file.
+      // 2. For each entry, test if it is a regular file. If so, we assume it is a js file.
+      // 3. For each file, read its content.
+      // 4. Write its content into output directory.
+      jses.forEach(function(jsFile) {
+        deployingFile++;
+        var file = config.jsSourceDir + "/" + jsFile;
+        fs.lstat(file, function(err, stat) {
+          if (stat.isFile()) {
+            fs.readFile(file, 'utf8', function(err, data) {
+              fs.writeFile(config.outputDir + "/js/" + jsFile, data, function(err) {
+                if (err) {
+                  e.emit('error', err);
+                  onDeployedOneFile();
+                } else {
+                  onDeployedOneFile();
+                }
+              });
+            });
+          }
+        });
+      });
+    }
+  });
+
+  return e;
+}
+
 function prepareDirectory() {
   var e = new EventEmitter();
 
+  function toDeployJs() {
+    var ee = deployJs();
+    ee.on('ok', function() {
+      e.emit('ok');
+    });
+
+    ee.on('error', function(err) {
+      e.emit('error', err);
+    });
+  }
+
+  function toDeployCss() {
+    var ee = deployCss();
+    ee.on('ok', function() {
+      toDeployJs();
+    });
+
+    ee.on('error', function(err) {
+      e.emit('error', err);
+    });
+  }
 
   mkdirp(config.outputDir, function(err) {
     if (err) {
       e.emit('error', err);
     } else {
-      var ee = deployCss();
-      ee.on('ok', function() {
-        e.emit('ok');
-      });
-
-      ee.on('error', function(err) {
-        e.emit('error', err);
-      });
+      toDeployCss();
     }
   });
 

@@ -1,6 +1,9 @@
 <% albums.forEach(function(a) { %><h2 class="photo-title"><%= a.title %></h2>
-<div class="album-info-box">
-  <% print('<a href="' + a.albumUrl + '"><img src="' + a.cover + '" /></a>'); %></div>
-<div class="photonumber"><%= a.photos.length %></div>
-</div><% }) %>
+<table class="album-list-item" to="<%= a.albumUrl %>">
+  <tr><td class="image-cell">
+  <% print('<img src="' + a.cover + '" class="album-list-cover"/>'); %></td><td>
+  <%= a.desc %><p class="photonumber">Photos: <%= a.photos.length %></p>
+  </td></tr>
+</table>
+<% }) %>
 

@@ -24,6 +24,7 @@ function modifyConfig(data) {
     templateDir: __dirname + data.templateDir,
     pagePartDir: __dirname + data.pagePartDir,
     cssSourceDir: __dirname + data.cssSourceDir,
+    jsSourceDir: __dirname + data.jsSourceDir,
     albumFileName: data.albumFileName,
     httpPrefix: data.httpPrefix,
     thumbnailName: data.thumbnailName,

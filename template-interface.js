@@ -23,6 +23,7 @@ function getPageProperties() {
     site: {
       title: config.siteTitle,
       css: [ config.httpPrefix + "/css/main.css" ],
+      js: [ config.httpPrefix + "/js/album.js" ],
       main: config.httpPrefix + "/"
     }
   }

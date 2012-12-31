@@ -204,14 +204,14 @@ function generateAlbum(albumPath) {
     var processingPhoto = 0;
     var nameMap = [];
 
-    function onProcessedOnePhoto(success, photo, newName) {
+    function onProcessedOnePhoto(success, photo, originalIndex, newName) {
       processingPhoto--;
       if (success) {
-        realAlbum.photos.push({
+        realAlbum.photos[originalIndex] = {
           file: newName,
           title: photo.title,
           desc: photo.desc,
-        });
+        };
       }
       if (processingPhoto == 0) {
         // Finalize album info.
@@ -227,7 +227,7 @@ function generateAlbum(albumPath) {
       var ee = generatePhoto(albumPath + '/' + photo.file, photo.title, photo.desc);
       ee.on('ok', function(newName) {
         nameMap[i] = newName;
-        onProcessedOnePhoto(true, photo, newName);
+        onProcessedOnePhoto(true, photo, i, newName);
       });
       ee.on('error', function(err) {
         console.error("Error when processing photo " + albumPath + '/' + photo.file + ": " + err);
@@ -284,6 +284,8 @@ function generateAlbumListForRendering(list) {
   function generatePhotoListForRendering(list) {
     var listForRendering = [];
     list.forEach(function(p) {
+      // The array may be sparse, we just care about real photos.
+      if (!p) return;
       listForRendering.push({
         thumbnailUrl: config.httpPrefix + "/" + p.file + "/" + config.thumbnailName,
         pageUrl: config.httpPrefix + "/" + p.file + "/",
@@ -301,10 +303,18 @@ function generateAlbumListForRendering(list) {
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos),
-      title: a.title,
+      title: a.title || "",
       desc: a.desc
     });
   });
+
+  // Sort listForRendering to make it stable. Sort by title.
+  listForRendering.sort(function(a, b) {
+    if (a.title > b.title) return 1;
+    if (a.title < b.title) return -1;
+    return 0;
+  });
+
   return listForRendering;
 }
 

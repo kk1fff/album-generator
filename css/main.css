@@ -47,3 +47,8 @@ header a, header a:visited {
     width: 170px;
     text-align: center;
 }
+
+.footer {
+    margin-top: 5px;
+    border-top: 1px black dashed;
+}

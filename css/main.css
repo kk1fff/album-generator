@@ -1,8 +1,3 @@
-html {
-    margin: 0;
-    padding: 0;
-}
-
 body {
     margin: 0 auto;
     max-width: 1000px;
@@ -13,42 +8,82 @@ a, a:visited {
     text-decoration: none;
 }
 
-header {
-    display: block;
-    background-color: black;
+.header {
+    background-color: #888;
     color: white;
+    display: block;
+    width: 100%;
+    height: 100px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 5px;
 }
 
-header a, header a:visited {
+.header .content {
+    font-weight: bold;
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    font-size: 300%;
+    vertical-align: bottom;
+}
+
+.header a, .header a:visited {
     color: white;
     text-decoration: none;
+}
+
+h1 {
+    font-size: 300%;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 250%;
+    font-weight: bold;
+    line-height: 200%;
 }
 
 .photo-row {
     vertical-align: middle;
 }
 
+.album-row .album-title {
+    font-size: 150%;
+}
+
+.album-row .album-title:before {
+    content: "# ";
+}
+
 .album-list-cover {
-    float: left;
     display: block;
     vertical-align: middle;
 }
 
-.album-list-item {
+.row-list-item {
+    display: table;
     width: 100%;
 }
 
-.album-list-item:hover {
-    background-color: #f0f0ff;
+.row-list-item:hover {
+    background-color: #ceeef5;
     cursor: pointer;
 }
 
-.album-list-item .image-cell {
-    width: 170px;
+.row-list-item .image-container {
+    width: 155px;
     text-align: center;
+    float: left;
 }
 
 .footer {
     margin-top: 5px;
     border-top: 1px black dashed;
+}
+
+.footer .poweredby {
+    text-align: center;
+    margin: 5px;
+    color: gray;
 }

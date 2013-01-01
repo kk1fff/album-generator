@@ -1,9 +1,11 @@
-<% albums.forEach(function(a) { %><h2 class="photo-title"><%= a.title %></h2>
-<table class="album-list-item" to="<%= a.albumUrl %>">
-  <tr><td class="image-cell">
-  <% print('<img src="' + a.cover + '" class="album-list-cover"/>'); %></td><td>
-  <%= a.desc %><p class="photonumber">Photos: <%= a.photos.length %></p>
-  </td></tr>
-</table>
+<% albums.forEach(function(a) { %>
+<div class="album-row row-list-item" to="<%= a.albumUrl %>">
+  <div class="image-container"><img src="<%= a.cover %>" class="album-list-cover"/></div>
+  <div class="describe-container">
+    <p class="album-title"><%= a.title %></p>
+    <p><%= a.desc %></p>
+    <p class="photonumber">Photos: <%= a.photos.length %></p>
+  </div>
+</div>
 <% }) %>
 

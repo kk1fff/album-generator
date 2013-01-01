@@ -60,7 +60,9 @@ following entry:
 
     {
         "title": "My album",
-        "desc": "I take these photos in Taipei, a lovely city"
+        "desc": "I take these photos in Taipei, a lovely city",
+        "name": "my-first-album",
+        "sortcode": 3,
         "photos": [
             {
                 "file": "DSC_5044.JPG",

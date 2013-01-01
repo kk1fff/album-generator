@@ -1,15 +1,15 @@
 <h2><%= title %></h2>
+<div><%= desc %></div>
 <img src="1000.jpg" />
-<%= desc %>
 <% if (exif) { %>
+<div class="exif-container">
   <h2>Exif</h2>
+  <table class="exif-table">
 <%
    Object.keys(exif).forEach(function (exifEntry) {
      var exifVal = exif[exifEntry];
 %>
-     <div style="exif">
-       <%= exifEntry %> - <%= exifVal %>
-     </div>
-<% })
-  }
-%>
+<tr class="exif-row"><td class="exif-key-cell"><%= exifEntry %></td><td class="exif-value-cell"><%= exifVal %></td></tr>
+<% }); %>
+  </table>
+<% } %>

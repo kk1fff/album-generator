@@ -47,18 +47,18 @@ h2 {
     line-height: 200%;
 }
 
-.album-row .album-title {
-    font-size: 150%;
+.footer {
+    margin-top: 5px;
+    border-top: 1px #aaa dashed;
 }
 
-.album-row .album-title:before {
-    content: "# ";
+.footer .poweredby {
+    text-align: center;
+    margin: 5px;
+    color: gray;
 }
 
-.album-list-cover {
-    display: block;
-    vertical-align: middle;
-}
+/* Basic custom components */
 
 .row-list-item {
     display: table;
@@ -76,15 +76,34 @@ h2 {
     float: left;
 }
 
+/* Album lists */
+
+.album-row .album-title {
+    font-size: 150%;
+}
+
+.album-row .album-title:before {
+    content: "# ";
+}
+
+.album-list-cover {
+    display: block;
+    vertical-align: middle;
+}
+
+.album-desc {
+    padding-bottom: 20px;
+}
+
+/* Albums */
+
 .photo-row {
     vertical-align: middle;
     width:33%;
     display: inline-block;
 }
 
-.album-desc {
-    padding-bottom: 20px;
-}
+/* Photos */
 
 .exif-table {
     width: 500px;
@@ -108,13 +127,3 @@ h2 {
     padding: 5px;
 }
 
-.footer {
-    margin-top: 5px;
-    border-top: 1px #aaa dashed;
-}
-
-.footer .poweredby {
-    text-align: center;
-    margin: 5px;
-    color: gray;
-}

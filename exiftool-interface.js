@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var exec = require('child_process').exec,
+var exec = require('./execqueue.js').exec,
     EventEmitter = require('events').EventEmitter;
 
 var allowedEntry = {

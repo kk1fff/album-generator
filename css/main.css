@@ -37,14 +37,13 @@ a, a:visited {
 }
 
 h1 {
-    font-size: 300%;
+    font-size: 30px;
     font-weight: bold;
 }
 
 h2 {
-    font-size: 250%;
+    font-size: 28px;
     font-weight: bold;
-    line-height: 200%;
 }
 
 .footer {
@@ -76,6 +75,12 @@ h2 {
     float: left;
 }
 
+.description-container {
+    font-size: 16px;
+    padding-bottom: 20px;
+    padding-top: 20px;
+}
+
 /* Album lists */
 
 .album-row .album-title {
@@ -91,16 +96,23 @@ h2 {
     vertical-align: middle;
 }
 
-.album-desc {
-    padding-bottom: 20px;
-}
-
 /* Albums */
 
 .photo-row {
     vertical-align: middle;
-    width:33%;
+    width:170px;
+    height: 180px;
     display: inline-block;
+    text-align: center;
+}
+
+.photo-row .image-container {
+    float: none;
+    display: inline-block;
+}
+
+.photo-title {
+    font-weight: bold;
 }
 
 /* Photos */

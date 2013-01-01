@@ -9,5 +9,6 @@
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "150.jpg",
-  "imageSizes"     : [150, 1000]
+  "imageSizes"     : [150, 1000],
+  "googleanalystics": "UA-37365226-1"
 }

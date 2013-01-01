@@ -24,6 +24,7 @@ function getPageProperties() {
       title: config.siteTitle,
       css: [ config.httpPrefix + "/css/main.css" ],
       js: [ config.httpPrefix + "/js/album.js" ],
+      googleanalystics: config.googleanalystics,
       main: config.httpPrefix + "/"
     }
   }

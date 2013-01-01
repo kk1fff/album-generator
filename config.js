@@ -19,6 +19,7 @@ var EventEmitter = require('events').EventEmitter;
 function modifyConfig(data) {
   return {
     siteTitle: data.siteTitle,
+    googleanalystics: data.googleanalystics,
     inputDir: __dirname + data.inputDir,
     outputDir: __dirname + data.outputDir,
     templateDir: __dirname + data.templateDir,

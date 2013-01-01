@@ -102,6 +102,10 @@ function generateAlbum(albumPath) {
 
     albumConfig.photos.forEach(function(photo, i) {
       processingPhoto++;
+
+      // Use file name as title of photo if the title is not specified.
+      photo.title = photo.title || photo.file;
+
       var ee = processPhoto(albumPath, photo.file, photo.title, photo.desc);
       ee.on('ok', function(newName) {
         nameMap[i] = newName;

@@ -26,7 +26,7 @@ var crypto        = require('crypto'),
 function generatePhotoPage(pi) {
   var generatingPage = generatePage('photo.html', pi);
   generatingPage.on('ok', function(page) {
-    console.log('Page is generated: ' + (pi.title || "for " + pi.originalPhoto));
+    console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
     if (config.debug)
       console.log('Page is generated: ' + page);
     fs.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
@@ -115,6 +115,7 @@ exports.processPhoto = function processPhoto(albumPath, photoFileName, title, de
         title: title,
         desc: desc,
         originalPhoto: originalPhoto,
+        originalFileName: photoFileName,
         e: e,
         page: {
           title: title

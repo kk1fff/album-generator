@@ -1,9 +1,12 @@
 <h2><%= album.title %></h2>
-<% if (album.desc) { %><p><%= album.desc %></p><% } %>
+<% if (album.desc) { %><p class="album-desc"><%= album.desc %></p><% } %>
 <% album.photos.forEach(function(p) { %>
 <div class="photo-row row-list-item" to="<%= p.pageUrl %>">
   <div class="image-container"><img src="<%= p.thumbnailUrl %>" /></div>
-  <div class="describe-container"><p><%= p.desc %></p></div>
+  <div class="describe-container">
+    <p><%= p.title %></p>
+    <p><%= p.desc %></p>
+  </div>
 </div>
 <% }); %>
 

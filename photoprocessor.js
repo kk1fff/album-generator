@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var crypto        = require('crypto'),
-    EventEmitter  = require('events').EventEmitter,
-    mkdirp        = require('mkdirp'),
-    ii            = require('./imagemagick-interface.js'),
-    generatePage  = require('./template-interface.js').generatePage,
-    config        = null;
-
 //  1. Create a folder in output dir, with the name is the new photo name.
 //  2. Resize the photo into the photo folder.
 //  3. Read add additional information (EXIF) and write to the photo folder.
 //  4. Generate page for that photo.
+
+var crypto        = require('crypto'),
+    EventEmitter  = require('events').EventEmitter,
+    mkdirp        = require('mkdirp'),
+    ii            = require('./imagemagick-interface.js'),
+    ei            = require('./exiftool-interface.js'),
+    generatePage  = require('./template-interface.js').generatePage,
+    config        = null;
+
 function generatePhotoPage(pi) {
   var generatingPage = generatePage('photo.html', pi);
   generatingPage.on('ok', function(page) {
@@ -70,7 +72,7 @@ function shrink(sizeArray, pi) {
 };
 
 function getExif(pi) {
-  var ee = ii.getExif(pi.originalPhoto);
+  var ee = ei.getExif(pi.originalPhoto);
   ee.on('ok', function(exif) {
     if (exif) {
       pi.exif = exif;

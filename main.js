@@ -86,7 +86,9 @@ function generatePhoto(originalPhoto, title, desc) {
   function generatePhotoPage(pi) {
     var generatingPage = generatePage('photo.html', pi);
     generatingPage.on('ok', function(page) {
-      console.log('Page is generated: ' + page);
+      console.log('Page is generated: ' + (pi.title || "for " + originalPhoto));
+      if (config.debug)
+        console.log('Page is generated: ' + page);
       fs.writeFile(photoDir + '/index.html', page, 'utf8', function(err) {
         if (err) {
           e.emit('error', err);
@@ -319,7 +321,9 @@ function generateAlbumListForRendering(list) {
 }
 
 function generateAlbumPage(albumInfo) {
-  console.log("Album Info: " + JSON.stringify(albumInfo));
+  if (config.debug) {
+    console.log("Album Info: " + JSON.stringify(albumInfo));
+  }
   var generating = generatePage('album.html', {
         album: albumInfo,
         page: {
@@ -343,8 +347,32 @@ function generateAlbumPage(albumInfo) {
   return e;
 }
 
+function formatAlbumListForLog(albumList) {
+  var res = '';
+
+  if (config.debug) {
+    console.log("Try formatting: " + JSON.stringify(albumList));
+  }
+
+  function formatPhoto(photos) {
+    var res = '';
+    photos.forEach(function(p) {
+      res += ('   - Photo: ' + p.file + '\n');
+    });
+    return res;
+  }
+
+  albumList.forEach(function(a) {
+    res += ('- Album: ' + a.title + '\n');
+    res += (' description: ' + (a.desc || "") + '\n');
+    res += (' photo: \n' + formatPhoto(a.photos));
+  });
+
+  return res;
+};
+
 function generateAlbumPages(albumList) {
-  console.log("Album list: " + JSON.stringify(albumList));
+  console.log("Generating album list:\n" + formatAlbumListForLog(albumList));
   var list = generateAlbumListForRendering(albumList),
       e = new EventEmitter(),
       generating = 0,
@@ -511,7 +539,7 @@ function processAlbums() {
   var ee;
   ee = fetchAlbumPath();
   ee.on('ok', function(list) {
-    console.log("File list: " + JSON.stringify(list));
+    console.log("Source album:\n" + list.join('\n'));
     var albumList = [];
     var pendingAlbum = 0;
 

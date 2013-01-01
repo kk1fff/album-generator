@@ -77,6 +77,10 @@ h2 {
     float: left;
 }
 
+.album-desc {
+    padding-bottom: 20px;
+}
+
 .footer {
     margin-top: 5px;
     border-top: 1px black dashed;

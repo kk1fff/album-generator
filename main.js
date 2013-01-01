@@ -102,7 +102,7 @@ function generateAlbum(albumPath) {
 
     albumConfig.photos.forEach(function(photo, i) {
       processingPhoto++;
-      var ee = processPhoto(albumPath + '/' + photo.file, photo.title, photo.desc);
+      var ee = processPhoto(albumPath, photo.file, photo.title, photo.desc);
       ee.on('ok', function(newName) {
         nameMap[i] = newName;
         onProcessedOnePhoto(true, photo, i, newName);

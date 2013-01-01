@@ -108,8 +108,9 @@ function createPhotoDir(pi) {
   });
 };
 
-exports.processPhoto = function processPhoto(originalPhoto, title, desc) {
+exports.processPhoto = function processPhoto(albumPath, photoFileName, title, desc) {
   var e = new EventEmitter(),
+      originalPhoto = albumPath + "/" + photoFileName,
       photoInfo = {
         title: title,
         desc: desc,

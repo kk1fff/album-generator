@@ -16,8 +16,18 @@ var exec = require('./execqueue.js').exec,
     EventEmitter = require('events').EventEmitter;
 
 exports.shrinkSize = function shrinkSize(size, fromFile, toFile) {
-  var e = new EventEmitter();
-  exec('convert "' + fromFile + '" -quality 40 -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
+  var e = new EventEmitter(),
+      qualityParam = "";
+
+  // If we produce thumbnail with very bad quality, it will be very hard
+  // to preview.
+  if (size > 300) {
+    qualityParam = "-quality 40";
+  } else {
+    qualityParam = "-quality 80";
+  }
+
+  exec('convert "' + fromFile + '" ' + qualityParam + ' -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
        function (error, stdout, stderr) {
          if (error !== null) {
            console.log('ShrinkSize error: ' + error);

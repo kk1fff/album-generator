@@ -9,5 +9,5 @@
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "150.jpg",
-  "imageSizes"     : [150, 2000, 1000]
+  "imageSizes"     : [150, 1000]
 }

@@ -95,6 +95,7 @@ function generateAlbum(albumPath) {
         realAlbum.title = albumConfig.title || albumPath;
         realAlbum.desc = albumConfig.desc;
         realAlbum.cover = nameMap[albumConfig.cover || 0];
+        realAlbum.name = albumConfig.name
         e.emit('ok', realAlbum);
       }
     }
@@ -125,7 +126,7 @@ function generateAlbum(albumPath) {
 };
 
 function getAlbumFileName(albumInfo) {
-  return 'album-' + albumInfo.index + '.html';
+  return albumInfo.name ? albumInfo.name + '.html' : 'album-' + albumInfo.index + '.html';
 }
 
 function getAlbumUrl(albumInfo) {

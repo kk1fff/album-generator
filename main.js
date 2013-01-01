@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var fs                  = require('fs'),
-    crypto              = require('crypto'),
-    EventEmitter        = require('events').EventEmitter;
-    mkdirp              = require('mkdirp'),
-    ii                  = require('./imagemagick-interface.js'),
-    generatePage        = require('./template-interface.js').generatePage;
+var fs           = require('fs'),
+    EventEmitter = require('events').EventEmitter;
+    mkdirp       = require('mkdirp'),
+    generatePage = require('./template-interface.js').generatePage,
+    processPhoto = require('./photoprocessor.js').processPhoto;
 
 // Error Log
 var errorLog = [];
@@ -67,130 +66,6 @@ function fetchAlbumPath() {
   return e;
 };
 
-//  1. Create a folder in output dir, with the name is the new photo name.
-//  2. Resize the photo into the photo folder.
-//  3. Read add additional information (EXIF) and write to the photo folder.
-//  4. Generate page for that photo.
-function generatePhoto(originalPhoto, title, desc) {
-  var e = new EventEmitter();
-  var photoDir;
-  var photoInfo = {
-    title: title,
-    desc: desc,
-    page: {
-      title: title
-    }
-  };
-  var newName = null;
-
-  function generatePhotoPage(pi) {
-    var generatingPage = generatePage('photo.html', pi);
-    generatingPage.on('ok', function(page) {
-      console.log('Page is generated: ' + (pi.title || "for " + originalPhoto));
-      if (config.debug)
-        console.log('Page is generated: ' + page);
-      fs.writeFile(photoDir + '/index.html', page, 'utf8', function(err) {
-        if (err) {
-          e.emit('error', err);
-        } else {
-          e.emit('ok', newName);
-        }
-      });
-    });
-    generatingPage.on('error', function(err) {
-      e.emit('error', err);
-    });
-  }
-
-  // Resize to specified size.
-  function shrink(sizeArray) {
-    var waitingShrinking = 0;
-    var e = new EventEmitter();
-    function onShrunk() {
-      waitingShrinking--;
-      if (waitingShrinking == 0) {
-        e.emit('ok');
-      }
-    }
-    sizeArray.forEach(function (size) {
-      waitingShrinking++;
-      console.log("Shrink " + originalPhoto + " to " + size + "px");
-      var ee = ii.shrinkSize(size, originalPhoto, photoDir + "/" + size + ".jpg");
-      ee.on('ok', function() {
-        onShrunk();
-      });
-      ee.on('error', function(err) {
-        console.error(err);
-        e.emit('error', err);
-        onShrunk();
-      });
-    });
-    
-    return e;
-  };
-
-  function getExif() {
-    var ee = ii.getExif(originalPhoto);
-    ee.on('ok', function(exif) {
-      if (exif) {
-        photoInfo.exif = exif;
-      }
-      generatePhotoPage(photoInfo);
-    });
-    ee.on('error', function(err) {
-      e.emit('error', err);
-    });
-  }
-
-  function createPhotoDir() {
-    fs.mkdir(photoDir, "755", function(err) {
-      if (err) {
-        // This photo is already be used in other album. It's ok, we can skip
-        // all futher file operations to this file.
-        if (err.code == 'EEXIST') {
-          e.emit('ok', newName);
-          return;
-        }
-
-        e.emit('error', err);
-        return;
-      }
-
-      // Right now we have a folder for the picture, we will create shrunk
-      // version and web page and place them into this folder.
-      var shrinking = shrink(config.imageSizes);
-      shrinking.on('ok', function() {
-        getExif();
-      });
-      shrinking.on('error', function(err) {
-        e.emit('error', err);
-      });
-    });
-  };
-
-  var sha1 = crypto.createHash('sha1');
-  var stream = fs.createReadStream(originalPhoto);
-
-  // We take title and desc into hash code, so the same photos but with different
-  // titles and descs will be different folder.
-  if (title) sha1.update(title);
-  if (desc) sha1.update(desc);
-
-  stream.on('data', function(d) {
-    sha1.update(d);
-  });
-  stream.on('end', function() {
-    newName = "photo-" + sha1.digest('hex');
-    photoDir = config.outputDir + '/' + newName;
-    createPhotoDir();
-  });
-  stream.on('error', function(err) {
-    e.emit('error', err);
-  });
-
-  return e;
-}
-
 function generateAlbum(albumPath) {
   var realAlbum = {};
   var e = new EventEmitter();
@@ -226,7 +101,7 @@ function generateAlbum(albumPath) {
 
     albumConfig.photos.forEach(function(photo, i) {
       processingPhoto++;
-      var ee = generatePhoto(albumPath + '/' + photo.file, photo.title, photo.desc);
+      var ee = processPhoto(albumPath + '/' + photo.file, photo.title, photo.desc);
       ee.on('ok', function(newName) {
         nameMap[i] = newName;
         onProcessedOnePhoto(true, photo, i, newName);

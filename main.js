@@ -95,7 +95,8 @@ function generateAlbum(albumPath) {
         realAlbum.title = albumConfig.title || albumPath;
         realAlbum.desc = albumConfig.desc;
         realAlbum.cover = nameMap[albumConfig.cover || 0];
-        realAlbum.name = albumConfig.name
+        realAlbum.name = albumConfig.name;
+        realAlbum.sortcode = albumConfig.sortcode || -1;
         e.emit('ok', realAlbum);
       }
     }
@@ -186,14 +187,15 @@ function generateAlbumListForRendering(list) {
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos),
       title: a.title || "",
+      sortcode: a.sortcode,
       desc: a.desc
     });
   });
 
   // Sort listForRendering to make it stable. Sort by title.
   listForRendering.sort(function(a, b) {
-    if (a.title > b.title) return 1;
-    if (a.title < b.title) return -1;
+    if (a.sortcode < b.sortcode) return 1;
+    if (a.sortcode > b.sortcode) return -1;
     return 0;
   });
 

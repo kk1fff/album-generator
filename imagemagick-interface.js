@@ -17,7 +17,7 @@ var exec = require('./execqueue.js').exec,
 
 exports.shrinkSize = function shrinkSize(size, fromFile, toFile) {
   var e = new EventEmitter();
-  exec('convert "' + fromFile + '" -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
+  exec('convert "' + fromFile + '" -quality 40 -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
        function (error, stdout, stderr) {
          if (error !== null) {
            console.log('ShrinkSize error: ' + error);

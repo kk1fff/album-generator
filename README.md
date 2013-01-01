@@ -10,14 +10,15 @@ It is very simple, so you don't need to learn much about how to use it.
 
 ## Installation
 
-The installation process is quite simple. We will need node.js and imagemagick
-in your computer. If you are using Mac or Linux, brew and apt-get may help you.
+The installation process is quite simple. We will need node.js, imagemagick
+and exiftool in your computer. If you are using Mac or Linux, brew and apt-get
+may help you.
 
-    brew install node imagemagick
+    brew install node imagemagick exiftool
 
 Or on ubuntu:
 
-    sudo apt-get install node imagemagick git
+    sudo apt-get install node imagemagick git exiftool
 
 Then get this repository
 

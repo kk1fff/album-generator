@@ -44,10 +44,6 @@ h2 {
     line-height: 200%;
 }
 
-.photo-row {
-    vertical-align: middle;
-}
-
 .album-row .album-title {
     font-size: 150%;
 }
@@ -75,6 +71,12 @@ h2 {
     width: 155px;
     text-align: center;
     float: left;
+}
+
+.photo-row {
+    vertical-align: middle;
+    width:33%;
+    display: inline-block;
 }
 
 .album-desc {

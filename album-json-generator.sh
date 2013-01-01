@@ -9,7 +9,7 @@ cat<<EOF > album.json
   "desc": "",
   "name": "_$DIRNAME",
   "sortcode": -1,
-  "photos:": [
+  "photos": [
 EOF
 
 for i in `ls *.[Jj][Pp][Gg]`; do

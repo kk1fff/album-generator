@@ -28,25 +28,6 @@ var crypto        = require('crypto'),
     runningNewNameTask = 0,
     newNameTaskLimit   = 5;
 
-function generatePhotoPage(pi) {
-  var generatingPage = generatePage('photo.html', pi);
-  generatingPage.on('ok', function(page) {
-    console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
-    if (config.debug)
-      console.log('Page is generated: ' + page);
-    fs.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
-      if (err) {
-        pi.e.emit('error', err);
-      } else {
-        pi.e.emit('ok', pi.newName);
-      }
-    });
-  });
-  generatingPage.on('error', function(err) {
-    pi.e.emit('error', err);
-  });
-}
-
 // Resize to specified size.
 function shrink(sizeArray, pi) {
   var waitingShrinking = 0;
@@ -77,10 +58,8 @@ function shrink(sizeArray, pi) {
 function getExif(pi) {
   var ee = ei.getExif(pi.originalPhoto);
   ee.on('ok', function(exif) {
-    if (exif) {
-      pi.exif = exif;
-    }
-    generatePhotoPage(pi);
+    pi.exif = exif;
+    pi.e.emit('ok', pi);
   });
   ee.on('error', function(err) {
     pi.e.emit('error', err);
@@ -93,7 +72,7 @@ function createPhotoDir(pi) {
       // This photo is already be used in other album. It's ok, we can skip
       // all futher file operations to this file.
       if (err.code == 'EEXIST') {
-        pi.e.emit('ok', pi.newName);
+        getExif(pi);
         return;
       }
 
@@ -186,6 +165,29 @@ exports.processPhoto = function processPhoto(initPhotoInfo) {
   if (!config) config = require('./config.js').getCachedConfig();
 
   getNewName(photoInfo);
+
+  return e;
+}
+
+exports.generatePhotoPage = function generatePhotoPage(pi) {
+  console.log('Generating photo page: ' + JSON.stringify(pi));
+  var generatingPage = generatePage('photo.html', pi),
+      e = new EventEmitter();
+
+  generatingPage.on('ok', function(page) {
+    console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
+    if (config.debug) console.log('Page is generated: ' + page);
+    fs.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
+      if (err) {
+        e.emit('error', err);
+      } else {
+        e.emit('ok');
+      }
+    });
+  });
+  generatingPage.on('error', function(err) {
+    e.emit('error', err);
+  });
 
   return e;
 }

@@ -16,7 +16,7 @@ var fs           = require('fs'),
     EventEmitter = require('events').EventEmitter;
     mkdirp       = require('mkdirp'),
     generatePage = require('./template-interface.js').generatePage,
-    processPhoto = require('./photoprocessor.js').processPhoto;
+    pp           = require('./photoprocessor.js');
 
 // Error Log
 var errorLog = [];
@@ -81,13 +81,14 @@ function generateAlbum(albumPath) {
     var processingPhoto = 0;
     var nameMap = [];
 
-    function onProcessedOnePhoto(success, photo, originalIndex, newName) {
+    function onProcessedOnePhoto(success, photo, originalIndex, photoInfo) {
       processingPhoto--;
       if (success) {
         realAlbum.photos[originalIndex] = {
-          file: newName,
-          title: photo.title,
-          desc: photo.desc,
+          file:      photoInfo.newName,
+          title:     photo.title,
+          desc:      photo.desc,
+          photoInfo: photoInfo
         };
       }
       if (processingPhoto == 0) {
@@ -107,16 +108,16 @@ function generateAlbum(albumPath) {
       // Use file name as title of photo if the title is not specified.
       photo.title = photo.title || photo.file;
 
-      var ee = processPhoto({
+      var ee = pp.processPhoto({
         albumPath:        albumPath,
         albumName:        getAlbumName(albumConfig),
         photoFileName:    photo.file,
         photoTitle:       photo.title,
         photoDescription: photo.desc
       });
-      ee.on('ok', function(newName) {
-        nameMap[i] = newName;
-        onProcessedOnePhoto(true, photo, i, newName);
+      ee.on('ok', function(photoInfo) {
+        nameMap[i] = photoInfo.newName;
+        onProcessedOnePhoto(true, photo, i, photoInfo);
       });
       ee.on('error', function(err) {
         console.error("Error when processing photo " + albumPath + '/' + photo.file + ": " + err);
@@ -183,9 +184,22 @@ function generateAlbumListForRendering(list) {
         thumbnailUrl: config.httpPrefix + "/" + p.file + "/" + config.thumbnailName,
         pageUrl: config.httpPrefix + "/" + p.file + "/",
         title: p.title,
-        desc: p.desc
+        desc: p.desc,
+        photoInfo: p.photoInfo,
+        file: p.file
       });
     });
+
+    // Build url for prev/next photo.
+    listForRendering.forEach(function(p, i) {
+      var next = i + 1;
+      var prev = i - 1;
+      if (next >= listForRendering.length) next = 0;
+      if (prev < 0) prev = listForRendering.length - 1;
+      p.photoInfo.prevUrl = config.httpPrefix + "/" + listForRendering[prev].file;
+      p.photoInfo.nextUrl = config.httpPrefix + "/" + listForRendering[next].file;
+    });
+
     return listForRendering;
   };
 
@@ -288,13 +302,33 @@ function generateAlbumPages(albumList) {
 
   list.forEach(function(a) {
     generating++;
-    var ee = generateAlbumPage(a);
+    var ee = generateAlbumPage(a),
+        generatingSingleAlbum = 1
+
+    function onSingleAlbumGenerated() {
+      generatingSingleAlbum--;
+      if (generatingSingleAlbum == 0) {
+        onAlbumPageGenerated();
+      }
+    }
+
+    a.photos.forEach(function(p) {
+      var ee = pp.generatePhotoPage(p.photoInfo);
+      ee.on('ok', function() {
+        onSingleAlbumGenerated();
+      });
+      ee.on('error', function(err) {
+        e.emit('error', err);
+        onSingleAlbumGenerated();
+      });
+    });
+
     ee.on('ok', function() {
-      onAlbumPageGenerated();
+      onSingleAlbumGenerated();
     });
     ee.on('error', function(err) {
       e.emit('error', err);
-      onAlbumPageGenerated();
+      onSingleAlbumGenerated();
     });
   });
   

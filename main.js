@@ -107,7 +107,13 @@ function generateAlbum(albumPath) {
       // Use file name as title of photo if the title is not specified.
       photo.title = photo.title || photo.file;
 
-      var ee = processPhoto(albumPath, photo.file, photo.title, photo.desc);
+      var ee = processPhoto({
+        albumPath:        albumPath,
+        albumName:        getAlbumName(albumConfig),
+        photoFileName:    photo.file,
+        photoTitle:       photo.title,
+        photoDescription: photo.desc
+      });
       ee.on('ok', function(newName) {
         nameMap[i] = newName;
         onProcessedOnePhoto(true, photo, i, newName);
@@ -130,8 +136,12 @@ function generateAlbum(albumPath) {
   return e;
 };
 
+function getAlbumName(albumInfo) {
+  return albumInfo.name;
+}
+
 function getAlbumFileName(albumInfo) {
-  return albumInfo.name ? albumInfo.name + '.html' : 'album-' + albumInfo.index + '.html';
+  return getAlbumName(albumInfo) + '.html';
 }
 
 function getAlbumUrl(albumInfo) {
@@ -439,7 +449,6 @@ function processAlbums() {
       pendingAlbum++;
       var ee = generateAlbum(p);
       ee.on('ok', function(album) {
-        album.index = i;
         albumList.push(album);
         onProcessedOneAlbum();
       });

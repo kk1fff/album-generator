@@ -134,7 +134,7 @@ function getNewName(photoInfo) {
     });
 
     stream.on('end', function() {
-      pi.newName = "photo-" + sha1.digest('hex');
+      pi.newName = "photo-" + pi.albumName + "-" + sha1.digest('hex');
       pi.photoDir = config.outputDir + '/' + pi.newName;
       done();
       createPhotoDir(pi);
@@ -147,7 +147,6 @@ function getNewName(photoInfo) {
   }
 
   function deque() {
-    // console.log("deque: " + runningNewNameTask);
     var newNameTask;
     if (runningNewNameTask < newNameTaskLimit) {
       while (!newNameTask && newNameQueue.length > 0) {
@@ -168,17 +167,18 @@ function getNewName(photoInfo) {
 }
 
 
-exports.processPhoto = function processPhoto(albumPath, photoFileName, title, desc) {
+exports.processPhoto = function processPhoto(initPhotoInfo) {
   var e = new EventEmitter(),
-      originalPhoto = albumPath + "/" + photoFileName,
+      originalPhoto = initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
       photoInfo = {
-        title: title,
-        desc: desc,
+        title: initPhotoInfo.title,
+        desc: initPhotoInfo.desc,
         originalPhoto: originalPhoto,
-        originalFileName: photoFileName,
+        originalFileName: initPhotoInfo.photoFileName,
+        albumName: initPhotoInfo.albumName,
         e: e,
         page: {
-          title: title
+          title: initPhotoInfo.title
         }
       };
 

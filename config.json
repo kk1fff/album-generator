@@ -8,7 +8,7 @@
   "jsSourceDir"    : "/clientjs",
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
-  "thumbnailName"  : "150.jpg",
-  "imageSizes"     : [150, 1000],
+  "thumbnailName"  : "250.jpg",
+  "imageSizes"     : [250, 1000],
   "googleanalystics": "UA-37365226-1"
 }

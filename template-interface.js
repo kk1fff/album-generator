@@ -16,7 +16,8 @@ var EventEmitter = require('events').EventEmitter,
     _ = require('underscore'),
     config = null,
     cachedTemplate = {},
-    cachedPageParts = {};
+    cachedPageParts = {},
+    pagePartWaitingQueue = {};
 
 function getPageProperties() {
   return {
@@ -37,14 +38,25 @@ function getPageParts(name) {
 
   if (cached) {
     setTimeout(e.emit.bind(e, 'ok', cached), 0);
+  } else if (pagePartWaitingQueue[name]) {
+    // If somebody is already reading this file, queue the request.
+    pagePartWaitingQueue[name].push(e);
   } else {
+    pagePartWaitingQueue[name] = [e];
     fs.readFile(config.pagePartDir + "/" + name, 'utf8', function(err, d) {
+      // Notify all the waiting event emitter that we got the file (or fail).
+      var waiting = pagePartWaitingQueue[name];
+      delete pagePartWaitingQueue[name];
       if (err) {
-        e.emit('error', err);
+        waiting.forEach(function(e) {
+          e.emit('error', err);
+        });
         return;
       }
       cachedPageParts[name] = d;
-      e.emit('ok', d);
+      waiting.forEach(function(e) {
+        e.emit('ok', d);
+      });
     });
   }
 

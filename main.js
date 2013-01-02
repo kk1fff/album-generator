@@ -16,7 +16,8 @@ var fs           = require('fs'),
     EventEmitter = require('events').EventEmitter;
     mkdirp       = require('mkdirp'),
     generatePage = require('./template-interface.js').generatePage,
-    pp           = require('./photoprocessor.js');
+    pp           = require('./photoprocessor.js'),
+    fsQueue      = require('./fs-queue.js');
 
 // Error Log
 var errorLog = [];
@@ -240,7 +241,7 @@ function generateAlbumPage(albumInfo) {
       }),
       e = new EventEmitter();
   generating.on('ok', function(page) {
-    fs.writeFile(config.outputDir + '/' + albumInfo.albumPageName, page, function(err) {
+    fsQueue.writeFile(config.outputDir + '/' + albumInfo.albumPageName, page, function(err) {
       if (err) {
         e.emit('error', err);
       } else {

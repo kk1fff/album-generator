@@ -23,6 +23,7 @@ var crypto        = require('crypto'),
     ii            = require('./imagemagick-interface.js'),
     ei            = require('./exiftool-interface.js'),
     generatePage  = require('./template-interface.js').generatePage,
+    fsQueue       = require('./fs-queue.js');
     config        = null,
     newNameQueue       = [],
     runningNewNameTask = 0,
@@ -177,7 +178,7 @@ exports.generatePhotoPage = function generatePhotoPage(pi) {
   generatingPage.on('ok', function(page) {
     console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
     if (config.debug) console.log('Page is generated: ' + page);
-    fs.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
+    fsQueue.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
       if (err) {
         e.emit('error', err);
       } else {

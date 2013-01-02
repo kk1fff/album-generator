@@ -70,7 +70,7 @@ h2 {
 }
 
 .row-list-item .image-container {
-    width: 155px;
+    width: 270px;
     text-align: center;
     float: left;
 }
@@ -90,6 +90,8 @@ h2 {
 .album-row {
     padding-top: 5px;
     padding-bottom: 5px;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .album-row .album-title:before {
@@ -105,8 +107,8 @@ h2 {
 
 .photo-row {
     vertical-align: middle;
-    width:170px;
-    height: 180px;
+    width: 270px;
+    height: 300px;
     display: inline-block;
     text-align: center;
 }
@@ -118,9 +120,11 @@ h2 {
 
 .photo-title {
     font-weight: bold;
+    font-size: 18px;
 }
 
 .photo-preview-container {
+    text-align:center;
 }
 
 /* Photos */

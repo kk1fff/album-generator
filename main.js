@@ -175,7 +175,7 @@ function generateAlbumListPage(albumList) {
 }
 
 function generateAlbumListForRendering(list) {
-  function generatePhotoListForRendering(list) {
+  function generatePhotoListForRendering(list, containingAlbum) {
     var listForRendering = [];
     list.forEach(function(p) {
       // The array may be sparse, we just care about real photos.
@@ -198,6 +198,8 @@ function generateAlbumListForRendering(list) {
       if (prev < 0) prev = listForRendering.length - 1;
       p.photoInfo.prevUrl = config.httpPrefix + "/" + listForRendering[prev].file;
       p.photoInfo.nextUrl = config.httpPrefix + "/" + listForRendering[next].file;
+      p.photoInfo.albumTitle = containingAlbum.title || "No title";
+      p.photoInfo.albumUrl = getAlbumUrl(containingAlbum);
     });
 
     return listForRendering;
@@ -209,8 +211,8 @@ function generateAlbumListForRendering(list) {
       cover: config.httpPrefix + "/" + a.cover + "/" + config.thumbnailName,
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
-      photos: generatePhotoListForRendering(a.photos),
-      title: a.title || "",
+      photos: generatePhotoListForRendering(a.photos, a),
+      title: a.title || "No title",
       sortcode: a.sortcode,
       desc: a.desc
     });

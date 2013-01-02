@@ -170,7 +170,7 @@ exports.processPhoto = function processPhoto(initPhotoInfo) {
 }
 
 exports.generatePhotoPage = function generatePhotoPage(pi) {
-  console.log('Generating photo page: ' + JSON.stringify(pi));
+  if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
   var generatingPage = generatePage('photo.html', pi),
       e = new EventEmitter();
 

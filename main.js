@@ -95,7 +95,6 @@ function generateAlbum(albumPath) {
         realAlbum.cover = nameMap[albumConfig.cover || 0];
         realAlbum.name = albumConfig.name;
         realAlbum.sortcode = albumConfig.sortcode || -1;
-        console.log("Real album: " + JSON.stringify(realAlbum));
         e.emit('ok', realAlbum);
       }
     }

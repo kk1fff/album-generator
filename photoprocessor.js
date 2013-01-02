@@ -23,7 +23,10 @@ var crypto        = require('crypto'),
     ii            = require('./imagemagick-interface.js'),
     ei            = require('./exiftool-interface.js'),
     generatePage  = require('./template-interface.js').generatePage,
-    config        = null;
+    config        = null,
+    newNameQueue       = [],
+    runningNewNameTask = 0,
+    newNameTaskLimit   = 5;
 
 function generatePhotoPage(pi) {
   var generatingPage = generatePage('photo.html', pi);
@@ -110,6 +113,61 @@ function createPhotoDir(pi) {
   });
 };
 
+function getNewName(photoInfo) {
+  
+  function done() {
+    runningNewNameTask--;
+    setTimeout(deque, 0);
+  }
+
+  function doGetNewName(pi) {
+    var sha1 = crypto.createHash('sha1'),
+        stream = fs.createReadStream(pi.originalPhoto);
+
+    // We take title and desc into hash code, so the same photos but with different
+    // titles and descs will be different folder.
+    if (pi.title) sha1.update(pi.title);
+    if (pi.desc) sha1.update(pi.desc);
+
+    stream.on('data', function(d) {
+      sha1.update(d);
+    });
+
+    stream.on('end', function() {
+      pi.newName = "photo-" + sha1.digest('hex');
+      pi.photoDir = config.outputDir + '/' + pi.newName;
+      done();
+      createPhotoDir(pi);
+    });
+
+    stream.on('error', function(err) {
+      done();
+      e.emit('error', err);
+    });
+  }
+
+  function deque() {
+    // console.log("deque: " + runningNewNameTask);
+    var newNameTask;
+    if (runningNewNameTask < newNameTaskLimit) {
+      while (!newNameTask && newNameQueue.length > 0) {
+        newNameTask = newNameQueue.shift();
+      }
+      if (newNameTask) {
+        runningNewNameTask++;
+        doGetNewName(newNameTask.photoInfo);
+      }
+    }
+  }
+
+  newNameQueue.push({
+    photoInfo: photoInfo
+  });
+
+  setTimeout(deque, 0);
+}
+
+
 exports.processPhoto = function processPhoto(albumPath, photoFileName, title, desc) {
   var e = new EventEmitter(),
       originalPhoto = albumPath + "/" + photoFileName,
@@ -122,31 +180,12 @@ exports.processPhoto = function processPhoto(albumPath, photoFileName, title, de
         page: {
           title: title
         }
-      },
-      sha1 = crypto.createHash('sha1'),
-      stream = fs.createReadStream(originalPhoto);
+      };
 
   // Lazy initialize.
-  if (!config) {
-    config = require('./config.js').getCachedConfig();
-  }
+  if (!config) config = require('./config.js').getCachedConfig();
 
-  // We take title and desc into hash code, so the same photos but with different
-  // titles and descs will be different folder.
-  if (title) sha1.update(title);
-  if (desc) sha1.update(desc);
-
-  stream.on('data', function(d) {
-    sha1.update(d);
-  });
-  stream.on('end', function() {
-    photoInfo.newName = "photo-" + sha1.digest('hex');
-    photoInfo.photoDir = config.outputDir + '/' + photoInfo.newName;
-    createPhotoDir(photoInfo);
-  });
-  stream.on('error', function(err) {
-    e.emit('error', err);
-  });
+  getNewName(photoInfo);
 
   return e;
 }

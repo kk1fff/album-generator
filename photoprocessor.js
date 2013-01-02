@@ -41,8 +41,8 @@ function shrink(sizeArray, pi) {
   }
   sizeArray.forEach(function (size) {
     waitingShrinking++;
-    console.log("Shrink " + pi.originalPhoto + " to " + size + "px");
-    var ee = ii.shrinkSize(size, pi.originalPhoto, pi.photoDir + "/" + size + ".jpg");
+    console.log("Shrink " + pi.originalFilePathName + " to " + size + "px");
+    var ee = ii.shrinkSize(size, pi.originalFilePathName, pi.photoDir + "/" + size + ".jpg");
     ee.on('ok', function() {
       onShrunk();
     });
@@ -57,13 +57,13 @@ function shrink(sizeArray, pi) {
 };
 
 function getExif(pi) {
-  var ee = ei.getExif(pi.originalPhoto);
+  var ee = ei.getExif(pi.originalFilePathName);
   ee.on('ok', function(exif) {
     pi.exif = exif;
-    pi.e.emit('ok', pi);
+    pi.emitter.emit('ok', pi);
   });
   ee.on('error', function(err) {
-    pi.e.emit('error', err);
+    pi.emitter.emit('error', err);
   });
 }
 
@@ -71,13 +71,13 @@ function createPhotoDir(pi) {
   fs.mkdir(pi.photoDir, "755", function(err) {
     if (err) {
       // This photo is already be used in other album. It's ok, we can skip
-      // all futher file operations to this file.
+      // all futher file operations to this file and jump to exif directly.
       if (err.code == 'EEXIST') {
         getExif(pi);
         return;
       }
 
-      pi.e.emit('error', err);
+      pi.emitter.emit('error', err);
       return;
     }
 
@@ -88,7 +88,7 @@ function createPhotoDir(pi) {
       getExif(pi);
     });
     shrinking.on('error', function(err) {
-      pi.e.emit('error', err);
+      pi.emitter.emit('error', err);
     });
   });
 };
@@ -102,7 +102,7 @@ function getNewName(photoInfo) {
 
   function doGetNewName(pi) {
     var sha1 = crypto.createHash('sha1'),
-        stream = fs.createReadStream(pi.originalPhoto);
+        stream = fs.createReadStream(pi.originalFilePathName);
 
     // We take title and desc into hash code, so the same photos but with different
     // titles and descs will be different folder.
@@ -114,15 +114,15 @@ function getNewName(photoInfo) {
     });
 
     stream.on('end', function() {
-      pi.newName = "photo-" + pi.albumName + "-" + sha1.digest('hex');
-      pi.photoDir = config.outputDir + '/' + pi.newName;
+      pi.name = "photo-" + pi.albumName + "-" + sha1.digest('hex');
+      pi.photoDir = config.outputDir + '/' + pi.name;
       done();
       createPhotoDir(pi);
     });
 
     stream.on('error', function(err) {
       done();
-      e.emit('error', err);
+      pi.emitter.emit('error', err);
     });
   }
 
@@ -146,20 +146,36 @@ function getNewName(photoInfo) {
   setTimeout(deque, 0);
 }
 
-
+// This function expects an input:
+// {
+//   albumPath: input path of album.
+//   albumName: album's unique name.
+//   photoFileName: photo's input file. (name only, no path)
+//   photoTitle: photo title.
+//   photoDescription: photo's description.
+// }
+// This function returns an event emitter. The event emitter is guaranteed
+// to be called at least once.
+// There are 2 events: 'ok' and 'error'.
+// 'ok' is called when the process is done. the call back is function(photoInfo)
+// A photoInfo object contains:
+// {
+//   title:     Photo title
+//   desc:      Photo description
+//   name:      Name of the output photo folder.
+//   albumName: Unique name of the album that contains this photo.
+//   exif:      A map of exif, if the photo contains exif information.
+// }
+// 'error' is called when error occurs, with an error object.
 exports.processPhoto = function processPhoto(initPhotoInfo) {
   var e = new EventEmitter(),
-      originalPhoto = initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
       photoInfo = {
-        title: initPhotoInfo.title,
-        desc: initPhotoInfo.desc,
-        originalPhoto: originalPhoto,
+        title: initPhotoInfo.photoTitle,
+        desc: initPhotoInfo.photoDescription,
+        originalFilePathName: initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
         originalFileName: initPhotoInfo.photoFileName,
         albumName: initPhotoInfo.albumName,
-        e: e,
-        page: {
-          title: initPhotoInfo.title
-        }
+        emitter: e
       };
 
   // Lazy initialize.
@@ -170,9 +186,14 @@ exports.processPhoto = function processPhoto(initPhotoInfo) {
   return e;
 }
 
+// Generate a static page for the photo and store to output folder.
 exports.generatePhotoPage = function generatePhotoPage(pi) {
   if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
-  var generatingPage = generatePage('photo.html', pi),
+  var generatingPage = generatePage('photo.html', { photo: pi,
+                                                    page: {
+                                                      title: pi.title
+                                                    }
+                                                  }),
       e = new EventEmitter();
 
   generatingPage.on('ok', function(page) {

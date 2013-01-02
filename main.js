@@ -85,12 +85,8 @@ function generateAlbum(albumPath) {
     function onProcessedOnePhoto(success, photo, originalIndex, photoInfo) {
       processingPhoto--;
       if (success) {
-        realAlbum.photos[originalIndex] = {
-          file:      photoInfo.newName,
-          title:     photo.title,
-          desc:      photo.desc,
-          photoInfo: photoInfo
-        };
+        photoInfo.inputFileName = photo.file;
+        realAlbum.photos[originalIndex] = photoInfo;
       }
       if (processingPhoto == 0) {
         // Finalize album info.
@@ -99,6 +95,7 @@ function generateAlbum(albumPath) {
         realAlbum.cover = nameMap[albumConfig.cover || 0];
         realAlbum.name = albumConfig.name;
         realAlbum.sortcode = albumConfig.sortcode || -1;
+        console.log("Real album: " + JSON.stringify(realAlbum));
         e.emit('ok', realAlbum);
       }
     }
@@ -117,7 +114,7 @@ function generateAlbum(albumPath) {
         photoDescription: photo.desc
       });
       ee.on('ok', function(photoInfo) {
-        nameMap[i] = photoInfo.newName;
+        nameMap[i] = photoInfo.name;
         onProcessedOnePhoto(true, photo, i, photoInfo);
       });
       ee.on('error', function(err) {
@@ -176,34 +173,29 @@ function generateAlbumListPage(albumList) {
 }
 
 function generateAlbumListForRendering(list) {
-  function generatePhotoListForRendering(list, containingAlbum) {
-    var listForRendering = [];
-    list.forEach(function(p) {
+  function generatePhotoListForRendering(photos, containingAlbum) {
+    var result = [];
+    photos.forEach(function(p) {
       // The array may be sparse, we just care about real photos.
       if (!p) return;
-      listForRendering.push({
-        thumbnailUrl: config.httpPrefix + "/" + p.file + "/" + config.thumbnailName,
-        pageUrl: config.httpPrefix + "/" + p.file + "/",
-        title: p.title,
-        desc: p.desc,
-        photoInfo: p.photoInfo,
-        file: p.file
-      });
+      result.push(p);
     });
 
     // Build url for prev/next photo.
-    listForRendering.forEach(function(p, i) {
+    result.forEach(function(p, i) {
       var next = i + 1;
       var prev = i - 1;
-      if (next >= listForRendering.length) next = 0;
-      if (prev < 0) prev = listForRendering.length - 1;
-      p.photoInfo.prevUrl = config.httpPrefix + "/" + listForRendering[prev].file;
-      p.photoInfo.nextUrl = config.httpPrefix + "/" + listForRendering[next].file;
-      p.photoInfo.albumTitle = containingAlbum.title || "No title";
-      p.photoInfo.albumUrl = getAlbumUrl(containingAlbum);
+      if (next >= result.length) next = 0;
+      if (prev < 0) prev = result.length - 1;
+      p.prevUrl = config.httpPrefix + "/" + result[prev].name;
+      p.nextUrl = config.httpPrefix + "/" + result[next].name;
+      p.albumTitle = containingAlbum.title || "No title";
+      p.albumUrl = getAlbumUrl(containingAlbum);
+      p.thumbnailUrl = config.httpPrefix + "/" + p.name + "/" + config.thumbnailName;
+      p.pageUrl = config.httpPrefix + "/" + p.name + "/";
     });
 
-    return listForRendering;
+    return result;
   };
 
   var listForRendering = [];
@@ -266,7 +258,7 @@ function formatAlbumListForLog(albumList) {
   function formatPhoto(photos) {
     var res = '';
     photos.forEach(function(p) {
-      res += ('   - Photo: ' + p.file + '\n');
+      res += ('   - Photo: ' + p.inputFileName + '\n');
     });
     return res;
   }
@@ -316,7 +308,7 @@ function generateAlbumPages(albumList) {
     }
 
     a.photos.forEach(function(p) {
-      var ee = pp.generatePhotoPage(p.photoInfo);
+      var ee = pp.generatePhotoPage(p);
       ee.on('ok', function() {
         onSingleAlbumGenerated();
       });

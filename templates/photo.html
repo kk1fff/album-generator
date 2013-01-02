@@ -1,17 +1,17 @@
-<h2><%= title %></h2>
-<div class="photo-description description-container"><%= desc %></div>
-<p class="photo-switcher"><a href="<%= albumUrl %>"><%= albumTitle %></a> - <a href="<%= prevUrl %>">Prev</a> / <a href="<%= nextUrl %>">Next</a></p>
+<h2><%= photo.title %></h2>
+<div class="photo-description description-container"><%= photo.desc %></div>
+<p class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> - <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></p>
 <div class="photo-container">
   <img class="photo" src="1000.jpg" />
 </div>
-<p class="photo-switcher"><a href="<%= albumUrl %>"><%= albumTitle %></a> - <a href="<%= prevUrl %>">Prev</a> / <a href="<%= nextUrl %>">Next</a></p>
-<% if (exif) { %>
+<p class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> - <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></p>
+<% if (photo.exif) { %>
 <div class="exif-container">
   <h2>Exif</h2>
   <table class="exif-table">
 <%
-   Object.keys(exif).forEach(function (exifEntry) {
-     var exifVal = exif[exifEntry];
+   Object.keys(photo.exif).forEach(function (exifEntry) {
+     var exifVal = photo.exif[exifEntry];
 %>
 <tr class="exif-row"><td class="exif-key-cell"><%= exifEntry %></td><td class="exif-value-cell"><%= exifVal %></td></tr>
 <% }); %>

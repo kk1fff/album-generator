@@ -1,10 +1,10 @@
+<div class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> &gt; <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></div>
 <h2><%= photo.title %></h2>
 <div class="photo-description description-container"><%= photo.desc %></div>
-<p class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> - <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></p>
 <div class="photo-container">
   <img class="photo" src="1000.jpg" />
 </div>
-<p class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> - <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></p>
+<div class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> &gt; <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></div>
 <% if (photo.exif) { %>
 <div class="exif-container">
   <h2>Exif</h2>

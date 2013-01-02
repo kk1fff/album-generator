@@ -148,7 +148,10 @@ h2 {
 }
 
 .photo-switcher {
-    font-size: 18px;
-    text-align: center;
+    font-size: 14px;
     padding: 10px;
+}
+
+.photo-switcher a, .photo-switcher a:visited {
+    color: #aaa;
 }

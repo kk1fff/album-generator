@@ -31,7 +31,7 @@ function runQueue() {
         // Callback, then run next task.
         queuedItem.cb.apply(this, args);
         running--;
-        setTimeout(runQueue(), 0);
+        setTimeout(runQueue, 0);
       });
     }
   }

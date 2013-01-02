@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var exec = require('child_process').exec,
-    limit = 5,
+var exec    = require('child_process').exec,
+    limit   = 2,
     running = 0;
 
 var cmdQueue = [];

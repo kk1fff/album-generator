@@ -2,13 +2,14 @@
 
 DIRNAME=${PWD##*/}
 FIRSTLINE=1
+TIMESTAMP=`date '+%s'`
 
 cat<<EOF > album.json
 {
   "title": "$DIRNAME",
   "desc": "",
-  "name": "_$DIRNAME",
-  "sortcode": -1,
+  "name": "_$TIMESTAMP",
+  "sortcode": $TIMESTAMP,
   "photos": [
 EOF
 

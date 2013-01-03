@@ -1,5 +1,5 @@
 {
-  "siteTitle"      : "Patrick's Album",
+  "siteTitle"      : "Album",
   "inputDir"       : "/input",
   "outputDir"      : "/output",
   "templateDir"    : "/templates",
@@ -10,5 +10,6 @@
   "httpPrefix"     : "",
   "thumbnailName"  : "250.jpg",
   "imageSizes"     : [250, 1000],
-  "googleanalystics": "UA-37365226-1"
+  "googleanalystics": "",
+  "disqus"         : ""
 }

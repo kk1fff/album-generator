@@ -18,18 +18,19 @@ var EventEmitter = require('events').EventEmitter;
 
 function modifyConfig(data) {
   return {
-    siteTitle: data.siteTitle,
-    googleanalystics: data.googleanalystics,
-    inputDir: __dirname + data.inputDir,
-    outputDir: __dirname + data.outputDir,
-    templateDir: __dirname + data.templateDir,
-    pagePartDir: __dirname + data.pagePartDir,
-    cssSourceDir: __dirname + data.cssSourceDir,
-    jsSourceDir: __dirname + data.jsSourceDir,
     albumFileName: data.albumFileName,
+    cssSourceDir: __dirname + data.cssSourceDir,
+    disqus: data.disqus,
+    googleanalystics: data.googleanalystics,
     httpPrefix: data.httpPrefix,
+    imageSizes: data.imageSizes,
+    inputDir: __dirname + data.inputDir,
+    jsSourceDir: __dirname + data.jsSourceDir,
+    outputDir: __dirname + data.outputDir,
+    pagePartDir: __dirname + data.pagePartDir,
+    siteTitle: data.siteTitle,
+    templateDir: __dirname + data.templateDir,
     thumbnailName: data.thumbnailName,
-    imageSizes: data.imageSizes
   }
 };
 

@@ -26,7 +26,8 @@ function getPageProperties() {
       css: [ config.httpPrefix + "/css/main.css" ],
       js: [ config.httpPrefix + "/js/album.js" ],
       googleanalystics: config.googleanalystics,
-      main: config.httpPrefix + "/"
+      main: config.httpPrefix + "/",
+      disqus: config.disqus
     }
   }
 }

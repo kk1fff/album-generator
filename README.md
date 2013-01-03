@@ -1,5 +1,54 @@
 # album-generator
 
+## Publish your own album to Heroku in 5 minutes (Mac)
+
+Sign up and install Heroku tool: https://devcenter.heroku.com/articles/quickstart
+
+Open _Terminal_ (It looks professional, but don't be afraid, you won't break you system!)
+
+Install _brew_
+
+    ruby -e "$(curl -fsSkL raw.github.com/mxcl/homebrew/go)"
+
+Install necessory tools: node, imagemagick and exiftool
+
+    brew install node imagemagick exiftool
+
+Get our source code.
+
+    git clone git://github.com/kk1fff/album-generator.git
+
+Copy your image folder into _input/_ folder.
+
+    cd album-generator
+    mkdir input
+    cd input
+    cp -R ~/Picture/2013-01-02-Jack-wedding ./
+
+Generate configure file
+
+    ../../album-json-generator.sh
+
+Generate album
+
+    cd ..
+    node main.js
+
+Create a Heroku app. The app URL will be shown right after you pressed
+enter. This is your album url
+
+    heroku create
+
+Deploy!
+
+    git add output
+    git commit -m 'Add album'
+    git push heroku master
+
+View your album on the Internet.
+    
+----------
+
 I really like flickr, an album site that I can show my photos. But, it is less
 customizable. I cannot add my own adsense on that, and it gives me just 300MB
 traffic per month.

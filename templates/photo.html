@@ -1,10 +1,10 @@
-<div class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> &gt; <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></div>
+<div class="photo-switcher"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a></div>
 <h2><%= photo.title %></h2>
 <div class="photo-description description-container"><%= photo.desc %></div>
 <div class="photo-container">
   <img class="photo" src="1000.jpg" />
 </div>
-<div class="photo-switcher"><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a> &gt; <a href="<%= photo.prevUrl %>">Prev</a> / <a href="<%= photo.nextUrl %>">Next</a></div>
+<div class="photo-switcher"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a></div>
 <% if (site.disqus && site.disqus.length > 0) { %>
 <div class="disqus-container">
     <div id="disqus_thread"></div>

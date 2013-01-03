@@ -152,9 +152,21 @@ h2 {
 
 .photo-switcher {
     font-size: 14px;
+    margin: 10px 0 10px 0;
+    background-color: #eee;
+}
+
+.photo-switcher a {
+    display: inline-block;
+    border-right: 2px #fff solid;
     padding: 10px;
 }
 
 .photo-switcher a, .photo-switcher a:visited {
-    color: #aaa;
+    color: #888;
+}
+
+.photo-switcher a:hover {
+    background-color: #666;
+    color: white;
 }

@@ -2,7 +2,7 @@
 <h2><%= photo.title %></h2>
 <div class="photo-description description-container"><%= photo.desc %></div>
 <div class="photo-container">
-  <img class="photo" src="1000.jpg" />
+  <a href="<%= photo.nextUrl %>"><img class="photo" src="1000.jpg" /></a>
 </div>
 <div class="photo-switcher"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a></div>
 <% if (site.disqus && site.disqus.length > 0) { %>

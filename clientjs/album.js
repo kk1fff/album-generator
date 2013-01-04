@@ -1,5 +1,5 @@
 window.addEventListener('load', function() {
-  $('.row-list-item').on('click', function(evt) {
+  $('.image-link').on('click', function(evt) {
     location.href = $(evt.delegateTarget).attr('to');
   });
 });

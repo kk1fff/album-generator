@@ -1,5 +1,6 @@
+<div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a></div>
 <% albums.forEach(function(a) { %>
-<div class="album-row row-list-item" to="<%= a.albumUrl %>">
+<div class="album-row image-link" to="<%= a.albumUrl %>">
   <div class="image-container"><img src="<%= a.cover %>" class="album-list-cover"/></div>
   <div class="describe-container">
     <p class="album-title"><%= a.title %></p>

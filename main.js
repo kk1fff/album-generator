@@ -191,6 +191,7 @@ function generateAlbumListForRendering(list) {
       p.albumTitle = containingAlbum.title || "No title";
       p.albumUrl = getAlbumUrl(containingAlbum);
       p.thumbnailUrl = config.httpPrefix + "/" + p.name + "/" + config.thumbnailName;
+      p.littleThumbnailUrl = config.httpPrefix + "/" + p.name + "/" + config.littleThumbnailName;
       p.pageUrl = config.httpPrefix + "/" + p.name + "/";
     });
 
@@ -200,7 +201,8 @@ function generateAlbumListForRendering(list) {
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
-      cover: config.httpPrefix + "/" + a.cover + "/" + config.thumbnailName,
+      thumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.thumbnailName,
+      littleThumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.littleThumbnailName,
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos, a),
@@ -220,12 +222,13 @@ function generateAlbumListForRendering(list) {
   return listForRendering;
 }
 
-function generateAlbumPage(albumInfo) {
+function generateAlbumPage(albumList, albumInfo) {
   if (config.debug) {
     console.log("Album Info: " + JSON.stringify(albumInfo));
   }
   var generating = generatePage('album.html', {
         album: albumInfo,
+        albums: albumList,
         page: {
            title: albumInfo.title
         }
@@ -296,7 +299,7 @@ function generateAlbumPages(albumList) {
 
   list.forEach(function(a) {
     generating++;
-    var ee = generateAlbumPage(a),
+    var ee = generateAlbumPage(list, a),
         generatingSingleAlbum = 1
 
     function onSingleAlbumGenerated() {

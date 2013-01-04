@@ -192,6 +192,30 @@ h2 {
     padding: 5px;
 }
 
+.tiny-album-list-container {
+    border-top: 1px #aaa dotted;
+    padding: 5px;
+}
+
+.tiny-album-list-container .title {
+    font-size: 16px;
+}
+
+.tiny-album-list-container .image-link {
+    padding: 5px 0 5px 0;
+}
+
+.tiny-album-list-container .image-container {
+    display: block;
+    float: left;
+}
+
+.tiny-album-list-container .describe-container {
+    font-size: 16px;
+    display: inline-block;
+    line-height: 120px;
+}
+
 /* Photos */
 
 .exif-table {

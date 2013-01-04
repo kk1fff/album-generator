@@ -24,6 +24,7 @@ function modifyConfig(data) {
     googleanalystics: data.googleanalystics,
     httpPrefix: data.httpPrefix,
     imageSizes: data.imageSizes,
+    squareImageSizes: data.squareImageSizes,
     inputDir: __dirname + data.inputDir,
     jsSourceDir: __dirname + data.jsSourceDir,
     outputDir: __dirname + data.outputDir,
@@ -31,6 +32,7 @@ function modifyConfig(data) {
     siteTitle: data.siteTitle,
     templateDir: __dirname + data.templateDir,
     thumbnailName: data.thumbnailName,
+    littleThumbnailName: data.littleThumbnailName,
   }
 };
 

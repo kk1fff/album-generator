@@ -9,7 +9,9 @@
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
   "thumbnailName"  : "250.jpg",
+  "littleThumbnailName": "80s.jpg",
   "imageSizes"     : [250, 1000],
+  "squareImageSizes": [80],
   "googleanalystics": "",
   "disqus"         : ""
 }

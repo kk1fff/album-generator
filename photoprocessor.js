@@ -30,7 +30,7 @@ var crypto        = require('crypto'),
     newNameTaskLimit   = 5;
 
 // Resize to specified size.
-function shrink(sizeArray, pi) {
+function shrink(pi) {
   var waitingShrinking = 0;
   var e = new EventEmitter();
   function onShrunk() {
@@ -39,7 +39,7 @@ function shrink(sizeArray, pi) {
       e.emit('ok');
     }
   }
-  sizeArray.forEach(function (size) {
+  config.imageSizes.forEach(function (size) {
     waitingShrinking++;
     console.log("Shrink " + pi.originalFilePathName + " to " + size + "px");
     var ee = ii.shrinkSize(size, pi.originalFilePathName, pi.photoDir + "/" + size + ".jpg");
@@ -52,6 +52,22 @@ function shrink(sizeArray, pi) {
       onShrunk();
     });
   });
+
+  // Square images
+  config.squareImageSizes.forEach(function (size) {
+    waitingShrinking++;
+    console.log("Shrink " + pi.originalFilePathName + " to " + size + "px");
+    var ee = ii.squareThumbnail(size, pi.originalFilePathName, pi.photoDir + "/" + size + "s.jpg");
+    ee.on('ok', function() {
+      onShrunk();
+    });
+    ee.on('error', function(err) {
+      console.error(err);
+      e.emit('error', err);
+      onShrunk();
+    });
+  });
+
     
   return e;
 };
@@ -83,7 +99,7 @@ function createPhotoDir(pi) {
 
     // Right now we have a folder for the picture, we will create shrunk
     // version and web page and place them into this folder.
-    var shrinking = shrink(config.imageSizes, pi);
+    var shrinking = shrink(pi);
     shrinking.on('ok', function() {
       getExif(pi);
     });

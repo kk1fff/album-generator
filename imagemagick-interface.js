@@ -15,6 +15,22 @@
 var exec = require('./execqueue.js').exec,
     EventEmitter = require('events').EventEmitter;
 
+exports.squareThumbnail = function squareThumbnail(size, fromFile, toFile) {
+  var e = new EventEmitter();
+
+  exec('convert "' + fromFile + '" -thumbnail ' + size + 'x' + size + '^' +
+       ' -gravity center -extent ' + size + 'x' + size + ' "' + toFile + '"',
+       function (error, stdout, stderr) {
+         if (error !== null) {
+           console.log('ShrinkSize error: ' + error);
+           e.emit('error', error);
+         } else {
+           e.emit('ok', toFile);
+         }
+       });
+  return e;
+}
+
 exports.shrinkSize = function shrinkSize(size, fromFile, toFile) {
   var e = new EventEmitter(),
       qualityParam = "";
@@ -27,7 +43,9 @@ exports.shrinkSize = function shrinkSize(size, fromFile, toFile) {
     qualityParam = "-quality 80";
   }
 
-  exec('convert "' + fromFile + '" ' + qualityParam + ' -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
+  exec('convert "' + fromFile + '" ' + 
+       [qualityParam].join(' ') +
+       ' -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
        function (error, stdout, stderr) {
          if (error !== null) {
            console.log('ShrinkSize error: ' + error);

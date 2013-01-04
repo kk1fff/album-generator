@@ -24,13 +24,13 @@ a, a:visited {
 
 .header .content {
     font-weight: bold;
-    margin: 0 auto;
-    font-size: 300%;
+    margin: 5px;
+    font-size: 36px;
     display: inline-block;
 }
 
 .header a, .header a:visited {
-    color: black;
+    color: #555;
     text-decoration: none;
 }
 
@@ -202,18 +202,18 @@ h2 {
 }
 
 .tiny-album-list-container .image-link {
-    padding: 5px 0 5px 0;
 }
 
 .tiny-album-list-container .image-container {
     display: block;
     float: left;
+    padding: 5px;
 }
 
 .tiny-album-list-container .describe-container {
     font-size: 16px;
     display: inline-block;
-    line-height: 120px;
+    line-height: 90px;
 }
 
 /* Photos */

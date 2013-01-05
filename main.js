@@ -17,55 +17,12 @@ var fs           = require('fs'),
     mkdirp       = require('mkdirp'),
     generatePage = require('./template-interface.js').generatePage,
     pp           = require('./photoprocessor.js'),
-    fsQueue      = require('./fs-queue.js');
+    fsQueue      = require('./fs-queue.js')
+    fileOperator = require('./file-operator.js');
 
 // Error Log
 var errorLog = [];
 var config = null;
-
-// Load all subdirectories from inputDir.
-function fetchAlbumPath() {
-  var e = new EventEmitter();
-
-  fs.readdir(config.inputDir, function(err, files) {
-    if (err) {
-      e.emit('error', err);
-      return;
-    }
-
-    var waitingStat = 0, dirList = [];
-
-    // Handle getting file stat, whenever it is success or not.
-    function onGotFileStat() {
-      waitingStat--;
-      if (waitingStat == 0) {
-        e.emit('ok', dirList);
-      }
-    };
-
-    files.forEach(function(file) {
-      var filePath = config.inputDir + '/' + file;
-      waitingStat++;
-      fs.lstat(filePath, function(err, stat) {
-        if (err || !stat.isDirectory()) {
-          onGotFileStat();
-          return;
-        }
-
-        // If the path is a directory, we will need to check if there's a
-        // configure file in it.
-        fs.lstat(filePath + '/' + config.albumFileName, function(err, stat) {
-          if (stat && stat.isFile()) {
-            dirList.push(filePath);
-          }
-          onGotFileStat();
-        });
-      });
-    });
-  });
-
-  return e;
-};
 
 function generateAlbum(albumPath) {
   var realAlbum = {};
@@ -460,7 +417,7 @@ function prepareDirectory() {
 
 function processAlbums() {
   var ee;
-  ee = fetchAlbumPath();
+  ee = fileOperator.fetchAlbumPath(true);
   ee.on('ok', function(list) {
     console.log("Source album:\n" + list.join('\n'));
     var albumList = [];

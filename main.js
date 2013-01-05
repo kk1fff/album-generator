@@ -25,7 +25,7 @@ var fs           = require('fs'),
 var errorLog = [];
 var config = null;
 
-function generateAlbum(albumPath) {
+function processAlbum(albumPath) {
   var realAlbum = {};
   var e = new EventEmitter();
 
@@ -104,11 +104,12 @@ function getAlbumUrl(albumInfo) {
   return config.httpPrefix + "/" + getAlbumFileName(albumInfo);
 }
 
-function generateAlbumListPage(albumList) {
+function generateAlbumListPage(albumList, tags) {
   var e = new EventEmitter();
 
   var generating = generatePage('album-list.html', {
     albums: albumList,
+    tags: tags,
     page: {
       title: "Album List"
     }
@@ -180,13 +181,14 @@ function generateAlbumListForRendering(list) {
   return listForRendering;
 }
 
-function generateAlbumPage(albumList, albumInfo) {
+function generateAlbumPage(albumList, albumInfo, tags) {
   if (config.debug) {
     console.log("Album Info: " + JSON.stringify(albumInfo));
   }
   var generating = generatePage('album.html', {
         album: albumInfo,
         albums: albumList,
+        tags: tags,
         page: {
            title: albumInfo.title
         }
@@ -232,12 +234,14 @@ function formatAlbumListForLog(albumList) {
   return res;
 };
 
-function generateAlbumPages(albumList) {
+function generatePages(albumList) {
   console.log("Generating album list:\n" + formatAlbumListForLog(albumList));
   var list = generateAlbumListForRendering(albumList),
       e = new EventEmitter(),
       generating = 0,
-      generatingAlbumList = generateAlbumListPage(list);
+      tags = tagging.getTags(),
+      generatingAlbumList = generateAlbumListPage(list, tags),
+      generatingTagPage = tagging.generateTagPages();
 
   function onAlbumPageGenerated() {
     generating--;
@@ -246,6 +250,7 @@ function generateAlbumPages(albumList) {
     }
   }
 
+  // Album List page.
   generating++;
   generatingAlbumList.on('ok', function() {
     onAlbumPageGenerated();
@@ -255,9 +260,20 @@ function generateAlbumPages(albumList) {
     onAlbumPageGenerated();
   });
 
+  // Tag pages.
+  generating++;
+  generatingTagPage.on('ok', function() {
+    onAlbumPageGenerated();
+  });
+  generatingTagPage.on('error', function(err) {
+    e.emit('error', err);
+    onAlbumPageGenerated();
+  });  
+
+  // Album and photo pages.
   list.forEach(function(a) {
     generating++;
-    var ee = generateAlbumPage(list, a),
+    var ee = generateAlbumPage(list, a, tags),
         generatingSingleAlbum = 1
 
     function onSingleAlbumGenerated() {
@@ -427,7 +443,7 @@ function processAlbums() {
     function onProcessedOneAlbum() {
       pendingAlbum--;
       if (pendingAlbum == 0) {
-        var ee = generateAlbumPages(albumList);
+        var ee = generatePages(albumList);
         ee.on('ok', function() {
           console.log("done");
         });
@@ -436,7 +452,7 @@ function processAlbums() {
 
     list.forEach(function(p, i) {
       pendingAlbum++;
-      var ee = generateAlbum(p);
+      var ee = processAlbum(p);
       ee.on('ok', function(album) {
         albumList.push(album);
         onProcessedOneAlbum();

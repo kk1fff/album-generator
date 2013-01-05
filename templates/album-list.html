@@ -9,4 +9,7 @@
   </div>
 </div>
 <% }) %>
+<% tags.forEach(function(t) { %>
+<a href="<%= t.tagUrl %>"><%= t.title %></a> 
+<% }); %>
 

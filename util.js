@@ -12,6 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+var safeChar = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-";
+
 exports.printErr = function printErr(msg, err) {
   console.log((msg || "Error: ") + err);
+}
+
+exports.getSafeName = function getSafeName(str) {
+  var i, result = "";
+  for (i = 0; i < str.length; i++) {
+    var ch = str.charAt(i);
+    if (safeChar.indexOf(ch) < 0) {
+      // not safe chars.
+      result += "_" + str.charCodeAt(i) + "_";
+    } else {
+      result += ch;
+    }
+  }
+  return result;
 }

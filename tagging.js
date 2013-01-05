@@ -12,7 +12,96 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var tagMap = {};
+var EventEmitter = require('events').EventEmitter,
+    fsQueue = require('./fs-queue.js'),
+    util = require('./util.js'),
+    photoprocessor = require('./photoprocessor.js'),
+    config,
+    tagMap = {};
+
+function resolveTag() {
+  // Sort and remove duplicated item.
+  function resolveSingleTag(photo) {
+    var prev = null, result = [];
+    photo.sort();
+    photo.forEach(function(p) {
+      if (p != prev) {
+        result.push(p);
+        prev = p;
+      }
+    });
+    return result;
+  }
+
+  Object.keys(tagMap).forEach(function(tag) {
+    var photos = tagMap[tag];
+    tagMap[tag] = resolveSingleTag(photos);
+  });
+  return tagMap;
+}
+
+function getTagName(tag) {
+  return "tag-" + util.getSafeName(tag);
+}
+
+function getTagUrl(tag) {
+  if (!config) config = require('./config.js').getCachedConfig()
+  return config.httpPrefix + "/" + getTagName(tag) + ".html";
+}
+
+function generateTagList() {
+  var ret = [];
+
+  if (!config) config = require('./config.js').getCachedConfig()
+  resolveTag();
+  Object.keys(tagMap).forEach(function(tag) {
+    ret.push({
+      title: tag,
+      photos: photoprocessor.getPhotoInfos(tagMap[tag]),
+      name: getTagName(tag),
+      tagUrl: getTagUrl(tag)
+    });
+  });
+  return ret;
+}
+
+exports.generateTagPages = function generateTagPages() {
+  var tags = resolveTag(),
+      generating = 0,
+      e = new EventEmitter();
+
+  function onPageGenerated(err) {
+    generating--;
+    if (err) {
+      e.emit('error', err);
+    }
+
+    if (generating == 0) {
+      e.emit('ok');
+    }
+  }
+
+  generateTagList().forEach(function(tagItem) {
+    var generatingPage = generatePage('tag.html',
+                                      { tag: tagItem,
+                                        page: {
+                                          title: tagItem.title
+                                        }
+                                      });
+    generating++;
+    generatingPage.on('ok', function(page) {
+      console.log('Page is generated: ' + tagItem.title);
+      if (config.debug) console.log('Page is generated: ' + page);
+      fsQueue.writeFile(config.outputDir + "/" + tagItem.name + ".html", page, 'utf8', function(err) {
+        onPageGenerated(err);
+      });
+    });
+    generatingPage.on('error', function(err) {
+      onPageGenerated(err);
+    });
+  });
+  return e;
+}
 
 // Add a photo into a tag.
 exports.addTag = function addTag(photoFileName, tag) {
@@ -22,4 +111,8 @@ exports.addTag = function addTag(photoFileName, tag) {
 
 exports.printTags = function printTags() {
   console.log(JSON.stringify(tagMap));
+}
+
+exports.getTags = function getTags() {
+  return generateTagList();
 }

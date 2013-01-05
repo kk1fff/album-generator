@@ -28,7 +28,8 @@ var crypto        = require('crypto'),
     config        = null,
     newNameQueue       = [],
     runningNewNameTask = 0,
-    newNameTaskLimit   = 5;
+    newNameTaskLimit   = 5,
+    photoInfoMap  = {}; // Name to info map.
 
 // Resize to specified size.
 function shrink(pi) {
@@ -85,6 +86,7 @@ function getExif(pi) {
     pi.exif = exif;
     pi.tags = pi.tags.concat(tag);
     addTagsOfPhoto(pi);
+    photoInfoMap[pi.name] = pi;
     pi.emitter.emit('ok', pi);
   });
   ee.on('error', function(err) {
@@ -216,11 +218,12 @@ exports.processPhoto = function processPhoto(initPhotoInfo) {
 // Generate a static page for the photo and store to output folder.
 exports.generatePhotoPage = function generatePhotoPage(pi) {
   if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
-  var generatingPage = generatePage('photo.html', { photo: pi,
-                                                    page: {
-                                                      title: pi.title
-                                                    }
-                                                  }),
+  var generatingPage = generatePage('photo.html',
+                                    { photo: pi,
+                                      page: {
+                                        title: pi.title
+                                      }
+                                    }),
       e = new EventEmitter();
 
   generatingPage.on('ok', function(page) {
@@ -239,4 +242,13 @@ exports.generatePhotoPage = function generatePhotoPage(pi) {
   });
 
   return e;
+}
+
+exports.getPhotoInfos = function getPhotoInfos(photoNames) {
+  var res = [];
+  photoNames.forEach(function(photoName) {
+    var pi = photoInfoMap[photoName];
+    if (pi) res.push(pi);
+  });
+  return res;
 }

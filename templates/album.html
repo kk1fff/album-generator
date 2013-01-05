@@ -1,6 +1,6 @@
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><span class="title"><%= album.title %></span></div>
-<div class="album-middle">
-<div class="photo-preview-container">
+<div class="content-container">
+<div class="content-area photo-preview-container">
 <% album.photos.forEach(function(p) { %><div class="image-link photo-row" to="<%= p.pageUrl %>">
   <div class="image-container"><img src="<%= p.thumbnailUrl %>" /></div>
   <div class="photo-title"><%= p.title %></div>
@@ -8,8 +8,8 @@
 </div>
 <div class="side-bar">
 <% if (album.desc) { %><div class="album-description description-container"><%= album.desc %></div><% } %>
-<div class="tiny-album-list-container">
-<div class="title">Albums</div>
+<div class="tiny-album-list-container side-bar-section">
+<p class="title">Albums</p>
 <% albums.forEach(function (a) { %>
 <div class="image-link" to="<%= a.albumUrl %>">
   <div class="image-container"><img src="<%= a.littleThumbnailUrl %>" class="album-list-cover"/></div>
@@ -18,6 +18,12 @@
   </div>
 </div>
 <% }) %>
+</div>
+<div class="tag-container side-bar-section">
+<p class="title">Tags</p>
+<% tags.forEach(function(t) { %>
+[<a href="<%= t.tagUrl %>"><%= t.title %></a>] 
+<% }); %>
 </div>
 </div>
 <div class="clear-fix"></div>

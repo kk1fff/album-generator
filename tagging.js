@@ -66,7 +66,7 @@ function generateTagList() {
 }
 
 exports.generateTagPages = function generateTagPages() {
-  var tags = resolveTag(),
+  var tags = generateTagList(),
       generating = 0,
       e = new EventEmitter();
 
@@ -81,9 +81,10 @@ exports.generateTagPages = function generateTagPages() {
     }
   }
 
-  generateTagList().forEach(function(tagItem) {
+  tags.forEach(function(tagItem) {
     var generatingPage = generatePage('tag.html',
                                       { tag: tagItem,
+                                        tags: tags,
                                         page: {
                                           title: tagItem.title
                                         }

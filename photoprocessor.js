@@ -83,8 +83,13 @@ function addTagsOfPhoto(pi) {
 function getExif(pi) {
   var ee = ei.getExif(pi.originalFilePathName);
   ee.on('ok', function(exif, tag) {
+    /* Add additional info to photo */
     pi.exif = exif;
     pi.tags = pi.tags.concat(tag);
+    pi.thumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.thumbnailName;
+    pi.littleThumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.littleThumbnailName;
+    pi.pageUrl = config.httpPrefix + "/" + pi.name + "/";
+
     addTagsOfPhoto(pi);
     photoInfoMap[pi.name] = pi;
     pi.emitter.emit('ok', pi);

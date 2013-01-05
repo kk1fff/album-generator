@@ -112,6 +112,36 @@ h2 {
     color: white;
 }
 
+.content-container {
+    display: inline;
+}
+
+.content-area {
+    width: 600px;
+    display: block;
+    float: left;
+    overflow: hidden;
+}
+
+.side-bar {
+    width: 389px;
+    float: left;
+    display: block;
+    padding: 5px;
+}
+
+.side-bar-section {
+    padding: 5px;
+}
+
+.side-bar-section .title {
+    font-size: 16px;
+    width: 100%;
+    border-bottom: 1px #aaa dotted;
+    padding: 0 0 5px 0;
+    margin: 0 0 5px 0;
+}
+
 /* Album lists */
 
 .album-row .album-title {
@@ -121,7 +151,7 @@ h2 {
 .album-row {
     padding: 5px;
     width: 100%;
-    display: table;
+    display: inline-block;
     margin: 2px 0 2px 0;
 }
 
@@ -141,22 +171,6 @@ h2 {
 }
 
 /* Albums */
-
-.album-middle {
-    display: inline;
-}
-
-.photo-preview-container {
-    max-width: 600px;
-    display: inline;
-    float: left;
-}
-
-.side-bar {
-    width: 399px;
-    float: left;
-    display: block;
-}
 
 .photo-row {
     vertical-align: middle;
@@ -190,15 +204,6 @@ h2 {
     top: 0px;
     left: 0px;
     padding: 5px;
-}
-
-.tiny-album-list-container {
-    border-top: 1px #aaa dotted;
-    padding: 5px;
-}
-
-.tiny-album-list-container .title {
-    font-size: 16px;
 }
 
 .tiny-album-list-container .image-link {

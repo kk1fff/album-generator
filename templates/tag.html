@@ -1,11 +1,18 @@
-<div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a></div>
-<% tag.photos.forEach(function(p) { %>
-<div class="album-row image-link" to="<%= p.photoUrl %>">
-  <div class="image-container"><img src="<%= p.thumbnailUrl %>" class="album-list-cover"/></div>
-  <div class="describe-container">
-    <p class="album-title"><%= p.title %></p>
-    <p><%= p.desc %></p>
-  </div>
+<div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><span class="title">Tag: <%= tag.title %></div>
+<div class="content-container">
+<div class="content-area">
+<% tag.photos.forEach(function(p) { %><div class="image-link photo-row" to="<%= p.pageUrl %>">
+  <div class="image-container"><img src="<%= p.thumbnailUrl %>" /></div>
+  <div class="photo-title"><%= p.title %></div>
+</div><% }); %>
 </div>
-<% }) %>
-
+<div class="side-bar">
+<div class="tag-container side-bar-section">
+<p class="title">Tags</p>
+<% tags.forEach(function(t) { %>
+[<a href="<%= t.tagUrl %>"><%= t.title %></a>] 
+<% }); %>
+</div>
+</div>
+<div class="clear-fix"></div>
+</div>

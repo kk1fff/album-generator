@@ -149,9 +149,6 @@ function generateAlbumListForRendering(list) {
       p.nextUrl = config.httpPrefix + "/" + result[next].name;
       p.albumTitle = containingAlbum.title || "No title";
       p.albumUrl = getAlbumUrl(containingAlbum);
-      p.thumbnailUrl = config.httpPrefix + "/" + p.name + "/" + config.thumbnailName;
-      p.littleThumbnailUrl = config.httpPrefix + "/" + p.name + "/" + config.littleThumbnailName;
-      p.pageUrl = config.httpPrefix + "/" + p.name + "/";
     });
 
     return result;

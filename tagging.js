@@ -65,6 +65,23 @@ function generateTagList() {
   return ret;
 }
 
+exports.getTagName = getTagName;
+
+exports.getTagUrl = getTagUrl;
+
+// For photo page usage
+exports.getSimpleProperties = function getSimpleProperties(tagTitleList) {
+  var ret = [];
+  tagTitleList.forEach(function(t) {
+    ret.push({
+      title: t,
+      name: getTagName(t),
+      tagUrl: getTagUrl(t)
+    });
+  });
+  return ret;
+}
+
 exports.generateTagPages = function generateTagPages() {
   var tags = generateTagList(),
       generating = 0,

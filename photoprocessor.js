@@ -83,15 +83,18 @@ function addTagsOfPhoto(pi) {
 function getExif(pi) {
   var ee = ei.getExif(pi.originalFilePathName);
   ee.on('ok', function(exif, tag) {
-    /* Add additional info to photo */
     pi.exif = exif;
     pi.tags = pi.tags.concat(tag);
+    addTagsOfPhoto(pi);
+
+    /* Add additional info to photo */
     pi.thumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.thumbnailName;
     pi.littleThumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.littleThumbnailName;
     pi.pageUrl = config.httpPrefix + "/" + pi.name + "/";
-
-    addTagsOfPhoto(pi);
+    
+    /* Store to map */
     photoInfoMap[pi.name] = pi;
+
     pi.emitter.emit('ok', pi);
   });
   ee.on('error', function(err) {
@@ -225,6 +228,7 @@ exports.generatePhotoPage = function generatePhotoPage(pi) {
   if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
   var generatingPage = generatePage('photo.html',
                                     { photo: pi,
+                                      tags: tagging.getSimpleProperties(pi.tags),
                                       page: {
                                         title: pi.title
                                       }

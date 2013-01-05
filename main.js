@@ -18,7 +18,8 @@ var fs           = require('fs'),
     generatePage = require('./template-interface.js').generatePage,
     pp           = require('./photoprocessor.js'),
     fsQueue      = require('./fs-queue.js')
-    fileOperator = require('./file-operator.js');
+    fileOperator = require('./file-operator.js'),
+    tagging      = require('./tagging.js');
 
 // Error Log
 var errorLog = [];

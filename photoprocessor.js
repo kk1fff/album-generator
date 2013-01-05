@@ -23,7 +23,8 @@ var crypto        = require('crypto'),
     ii            = require('./imagemagick-interface.js'),
     ei            = require('./exiftool-interface.js'),
     generatePage  = require('./template-interface.js').generatePage,
-    fsQueue       = require('./fs-queue.js');
+    fsQueue       = require('./fs-queue.js'),
+    tagging       = require('./tagging.js'),
     config        = null,
     newNameQueue       = [],
     runningNewNameTask = 0,
@@ -72,10 +73,18 @@ function shrink(pi) {
   return e;
 };
 
+function addTagsOfPhoto(pi) {
+  pi.tags.forEach(function(tag) {
+    tagging.addTag(pi.name, tag);
+  });
+}
+
 function getExif(pi) {
   var ee = ei.getExif(pi.originalFilePathName);
-  ee.on('ok', function(exif) {
+  ee.on('ok', function(exif, tag) {
     pi.exif = exif;
+    pi.tags = pi.tags.concat(tag);
+    addTagsOfPhoto(pi);
     pi.emitter.emit('ok', pi);
   });
   ee.on('error', function(err) {
@@ -181,6 +190,7 @@ function getNewName(photoInfo) {
 //   name:      Name of the output photo folder.
 //   albumName: Unique name of the album that contains this photo.
 //   exif:      A map of exif, if the photo contains exif information.
+//   tags:      A list of tag of th photo.
 // }
 // 'error' is called when error occurs, with an error object.
 exports.processPhoto = function processPhoto(initPhotoInfo) {
@@ -191,7 +201,8 @@ exports.processPhoto = function processPhoto(initPhotoInfo) {
         originalFilePathName: initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
         originalFileName: initPhotoInfo.photoFileName,
         albumName: initPhotoInfo.albumName,
-        emitter: e
+        emitter: e,
+        tags: initPhotoInfo.tags || []
       };
 
   // Lazy initialize.

@@ -63,13 +63,14 @@ function processAlbum(albumPath) {
       // Use file name as title of photo if the title is not specified.
       photo.title = photo.title || photo.file;
 
-      var ee = pp.processPhoto({
+      var pprocessor = new pp.Processor({
         albumPath:        albumPath,
         albumName:        getAlbumName(albumConfig),
         photoFileName:    photo.file,
         photoTitle:       photo.title,
         photoDescription: photo.desc
       });
+      var ee = pprocessor.processPhoto();
       ee.on('ok', function(photoInfo) {
         nameMap[i] = photoInfo.name;
         onProcessedOnePhoto(true, photo, i, photoInfo);

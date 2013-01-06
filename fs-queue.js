@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var fs      = require('fs'),
+var fs           = require('fs'),
+    EventEmitter = require('events').EventEmitter,
     limit   = 2,
     running = 0;
 
@@ -25,35 +26,65 @@ function runQueue() {
       queuedItem = fsQueue.shift();
     }
     if (queuedItem) {
-      running++;
-      wrappedCallback = function() {
-        var args = Array.prototype.slice.call(arguments);
-        // Callback, then run next task.
-        queuedItem.cb.apply(this, args);
-        running--;
-        setTimeout(runQueue, 0);
-      };
-      if (queuedItem.type) {
-        fs.writeFile(queuedItem.file, queuedItem.data, queuedItem.type, wrappedCallback);
-      } else {
-        fs.writeFile(queuedItem.file, queuedItem.data, wrappedCallback);
-      }
+      queuedItem.func.apply(queuedItem.obj, queuedItem.args);
     }
   }
 };
 
-exports.writeFile = function writeFileEqueue(file, data, typeOrCallback, callback) {
-  var type;
-  if (typeof(typeOrCallback) == 'function') {
-    callback = typeOrCallback;
-  } else {
-    type = typeOrCallback;
-  }
-  fsQueue.push({
-    file: file,
-    data: data,
-    type: type,
-    cb: callback
-  });
+function wrapCallback(callback) {
+  return function() {
+    var args = Array.prototype.slice.call(arguments);
+    // call callback function, then run next task.
+    callback.apply(this, args);
+    running--;
+    setTimeout(runQueue, 0);
+  };
+}
+
+function fsQueueAdd(queuedItem) {
+  fsQueue.push(queuedItem);
   setTimeout(runQueue, 0);
+}
+
+function getFileHash(hash, path, callback) {
+  var ee = fs.createReadStream(path);
+  ee.on('data', function(d) {
+    hash.update(d);
+  });
+  ee.on('end', function() {
+    callback(null, hash);
+  });
+}
+
+exports.writeFile = function writeFileEqueue(file, data, typeOrCallback, callback) {
+  var args = [file, data];
+  if (typeof(typeOrCallback) == 'function') {
+    args.push(wrapCallback(typeOrCallback));
+  } else {
+    args.push(typeOrCallback);
+    args.push(wrapCallback(callback));
+  }
+
+  fsQueueAdd({
+    func: fs.writeFile,
+    obj: fs,
+    args: args
+  });
 };
+
+exports.getHash = function getHash(hash, path) {
+  var emitter = new EventEmitter(),
+      args = [hash, path];
+  args.push(wrapCallback(function(err, hash) {
+    if (err) {
+      emitter.emit('error', err);
+    } else {
+      emitter.emit('ok', hash);
+    }
+  }));
+  fsQueueAdd({
+    func: getFileHash,
+    obj: null,
+    args: args});
+  return emitter;
+}

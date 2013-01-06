@@ -31,197 +31,241 @@ var crypto        = require('crypto'),
     newNameTaskLimit   = 5,
     photoInfoMap  = {}; // Name to info map.
 
-// Resize to specified size.
-function shrink(pi) {
-  var waitingShrinking = 0;
-  var e = new EventEmitter();
-  function onShrunk() {
-    waitingShrinking--;
-    if (waitingShrinking == 0) {
-      e.emit('ok');
+// Constants
+var STATE_ERROR            = 0;
+var STATE_AVAILABLE        = 1;
+var STATE_GETTING_NEW_NAME = 2;
+var STATE_CREATING_DIR     = 3;
+var STATE_SHRINKING_IMAGE  = 4;
+var STATE_GETTING_EXIF     = 5;
+
+var RESULT_OK              = 0;
+var RESULT_ERROR           = 1;
+var RESULT_FILE_READY      = 2;
+var RESULT_PROCESS_PHOTO   = 3;
+
+var Processor = function Processor(photoInfo) {
+  this.initPhotoInfo = photoInfo;
+  this.state = STATE_AVAILABLE;
+}
+
+Processor.prototype = {
+  shrink: function shrink() {
+    var waitingShrinking = 0,
+        photo = this.photo,
+        self = this;
+    function onShrunk() {
+      waitingShrinking--;
+      if (waitingShrinking == 0) {
+        self.onOperationDone(RESULT_OK);
+      }
     }
-  }
-  config.imageSizes.forEach(function (size) {
-    waitingShrinking++;
-    console.log("Shrink " + pi.originalFilePathName + " to " + size + "px");
-    var ee = ii.shrinkSize(size, pi.originalFilePathName, pi.photoDir + "/" + size + ".jpg");
-    ee.on('ok', function() {
-      onShrunk();
+
+    config.imageSizes.forEach(function (size) {
+      waitingShrinking++;
+      console.log("Shrink " + photo.originalFilePathName + " to " + size + "px");
+      var ee = ii.shrinkSize(size, photo.originalFilePathName, photo.photoDir + "/" + size + ".jpg");
+      ee.on('ok', function() {
+        onShrunk();
+      });
+      ee.on('error', function(err) {
+        console.error(err);
+        self.handleError(err);
+        onShrunk();
+      });
     });
+
+    // Square images
+    config.squareImageSizes.forEach(function (size) {
+      waitingShrinking++;
+      console.log("Shrink " + photo.originalFilePathName + " to " + size + "px");
+      var ee = ii.squareThumbnail(size, photo.originalFilePathName, photo.photoDir + "/" + size + "s.jpg");
+      ee.on('ok', function() {
+        onShrunk();
+      });
+      ee.on('error', function(err) {
+        console.error(err);
+        self.handleError(err);
+        onShrunk();
+      });
+    });
+  },
+
+  getExif: function getExif() {
+    var photo = this.photo,
+        self = this,
+        ee = ei.getExif(photo.originalFilePathName);
+    ee.on('ok', function(exif, tag) {
+      photo.exif = exif;
+      photo.tags = photo.tags.concat(tag);
+      self.addTagsOfPhoto();
+
+      // Add additional info to photo
+      photo.thumbnailUrl = config.httpPrefix + "/" + photo.name + "/" + config.thumbnailName;
+      photo.littleThumbnailUrl = config.httpPrefix + "/" + photo.name + "/" + config.littleThumbnailName;
+      photo.pageUrl = config.httpPrefix + "/" + photo.name + "/";
+
+      // Store to map
+      photoInfoMap[photo.name] = photo;
+
+      self.onOperationDone(RESULT_OK);
+    });
+
     ee.on('error', function(err) {
-      console.error(err);
-      e.emit('error', err);
-      onShrunk();
+      self.onOperationDone(RESULT_ERROR, err);
     });
-  });
+  },
 
-  // Square images
-  config.squareImageSizes.forEach(function (size) {
-    waitingShrinking++;
-    console.log("Shrink " + pi.originalFilePathName + " to " + size + "px");
-    var ee = ii.squareThumbnail(size, pi.originalFilePathName, pi.photoDir + "/" + size + "s.jpg");
-    ee.on('ok', function() {
-      onShrunk();
+  addTagsOfPhoto: function addTagsOfPhoto() {
+    var photo = this.photo;
+    photo.tags.forEach(function(tag) {
+      tagging.addTag(photo.name, tag);
     });
-    ee.on('error', function(err) {
-      console.error(err);
-      e.emit('error', err);
-      onShrunk();
-    });
-  });
+  },
 
-    
-  return e;
-};
-
-function addTagsOfPhoto(pi) {
-  pi.tags.forEach(function(tag) {
-    tagging.addTag(pi.name, tag);
-  });
-}
-
-function getExif(pi) {
-  var ee = ei.getExif(pi.originalFilePathName);
-  ee.on('ok', function(exif, tag) {
-    pi.exif = exif;
-    pi.tags = pi.tags.concat(tag);
-    addTagsOfPhoto(pi);
-
-    /* Add additional info to photo */
-    pi.thumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.thumbnailName;
-    pi.littleThumbnailUrl = config.httpPrefix + "/" + pi.name + "/" + config.littleThumbnailName;
-    pi.pageUrl = config.httpPrefix + "/" + pi.name + "/";
-    
-    /* Store to map */
-    photoInfoMap[pi.name] = pi;
-
-    pi.emitter.emit('ok', pi);
-  });
-  ee.on('error', function(err) {
-    pi.emitter.emit('error', err);
-  });
-}
-
-function createPhotoDir(pi) {
-  fs.mkdir(pi.photoDir, "755", function(err) {
-    if (err) {
-      // This photo is already be used in other album. It's ok, we can skip
-      // all futher file operations to this file and jump to exif directly.
-      if (err.code == 'EEXIST') {
-        getExif(pi);
+  createPhotoDir: function createPhotoDir() {
+    var self = this,
+        photo = this.photo;
+    fs.mkdir(photo.photoDir, "755", function(err) {
+      if (err) {
+        // This photo is already be used in other album. It's ok, we can skip
+        // all futher file operations to this file and jump to exif directly.
+        if (err.code == 'EEXIST') {
+          self.onOperationDone(RESULT_FILE_READY);
+        } else {
+          self.onOperationDone(RESULT_ERROR, err);
+        }
         return;
       }
 
-      pi.emitter.emit('error', err);
-      return;
-    }
-
-    // Right now we have a folder for the picture, we will create shrunk
-    // version and web page and place them into this folder.
-    var shrinking = shrink(pi);
-    shrinking.on('ok', function() {
-      getExif(pi);
+      // Right now we have a folder for the picture
+      self.onOperationDone(RESULT_OK);
     });
-    shrinking.on('error', function(err) {
-      pi.emitter.emit('error', err);
-    });
-  });
-};
+  },
 
-function getNewName(photoInfo) {
-  
-  function done() {
-    runningNewNameTask--;
-    setTimeout(deque, 0);
-  }
+  // This function expects an input:
+  // {
+  //   albumPath: input path of album.
+  //   albumName: album's unique name.
+  //   photoFileName: photo's input file. (name only, no path)
+  //   photoTitle: photo title.
+  //   photoDescription: photo's description.
+  // }
+  // This function returns an event emitter. The event emitter is guaranteed
+  // to be called at least once.
+  // There are 2 events: 'ok' and 'error'.
+  // 'ok' is called when the process is done. the call back is function(photoInfo)
+  // A photoInfo object contains:
+  // {
+  //   title:     Photo title
+  //   desc:      Photo description
+  //   name:      Name of the output photo folder.
+  //   albumName: Unique name of the album that contains this photo.
+  //   exif:      A map of exif, if the photo contains exif information.
+  //   tags:      A list of tag of th photo.
+  // }
+  // 'error' is called when error occurs, with an error object.
+  processPhoto: function processPhoto() {
+    var e = new EventEmitter(),
+        initPhotoInfo = this.initPhotoInfo;
 
-  function doGetNewName(pi) {
-    var sha1 = crypto.createHash('sha1'),
-        stream = fs.createReadStream(pi.originalFilePathName);
+    this.photo = {
+      title: initPhotoInfo.photoTitle,
+      desc: initPhotoInfo.photoDescription,
+      originalFilePathName: initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
+      originalFileName: initPhotoInfo.photoFileName,
+      albumName: initPhotoInfo.albumName,
+      emitter: e,
+      tags: initPhotoInfo.tags || []
+    };
+
+    // Lazy initialize.
+    if (!config) config = require('./config.js').getCachedConfig();
+
+    this.onOperationDone(RESULT_PROCESS_PHOTO);
+    return e;
+  },
+
+  getNewName: function getNewName() {
+    var self = this,
+        sha1 = crypto.createHash('sha1'),
+        photo = this.photo,
+        gettingHash;
 
     // We take title and desc into hash code, so the same photos but with different
     // titles and descs will be different folder.
-    if (pi.title) sha1.update(pi.title);
-    if (pi.desc) sha1.update(pi.desc);
+    if (photo.title) sha1.update(photo.title);
+    if (photo.desc) sha1.update(photo.desc);
 
-    stream.on('data', function(d) {
-      sha1.update(d);
+    gettingHash = fsQueue.getHash(sha1, photo.originalFilePathName);
+    gettingHash.on('ok', function(hash) {
+      photo.name = "photo-" + photo.albumName + "-" + hash.digest('hex');
+      photo.photoDir = config.outputDir + '/' + photo.name;
+      self.onOperationDone(RESULT_OK);
     });
 
-    stream.on('end', function() {
-      pi.name = "photo-" + pi.albumName + "-" + sha1.digest('hex');
-      pi.photoDir = config.outputDir + '/' + pi.name;
-      done();
-      createPhotoDir(pi);
+    gettingHash.on('error', function(err) {
+      self.onOperationDone(RESULT_ERROR, err);
     });
+  },
 
-    stream.on('error', function(err) {
-      done();
-      pi.emitter.emit('error', err);
-    });
-  }
-
-  function deque() {
-    var newNameTask;
-    if (runningNewNameTask < newNameTaskLimit) {
-      while (!newNameTask && newNameQueue.length > 0) {
-        newNameTask = newNameQueue.shift();
+  onOperationDone: function onOperationDone(result, err) {
+    switch (this.state) {
+    case STATE_AVAILABLE:
+      if (result === RESULT_PROCESS_PHOTO) {
+        this.state = STATE_GETTING_NEW_NAME;
+        setTimeout(this.getNewName.bind(this), 0);
       }
-      if (newNameTask) {
-        runningNewNameTask++;
-        doGetNewName(newNameTask.photoInfo);
+      break;
+    case STATE_GETTING_NEW_NAME:
+      if (result === RESULT_OK) {
+        this.state = STATE_CREATING_DIR;
+        setTimeout(this.createPhotoDir.bind(this), 0);
+      } else {
+        this.state = STATE_ERROR;
+        setTimeout(this.handleError.bind(this, err), 0);
       }
+      break;
+    case STATE_CREATING_DIR:
+      if (result === RESULT_OK) {
+        // Shrink image
+        this.state = STATE_SHRINKING_IMAGE;
+        setTimeout(this.shrink.bind(this), 0);
+      } else if (result === RESULT_FILE_READY) {
+        // File is already there. Just get EXIF.
+        this.state = STATE_GETTING_EXIF;
+        setTimeout(this.getExif.bind(this), 0);
+      } else {
+        this.state = STATE_ERROR;
+        setTimeout(this.handleError.bind(this, err), 0);
+      }
+      break;
+    case STATE_SHRINKING_IMAGE:
+      if (result === RESULT_OK) {
+        this.state = STATE_GETTING_EXIF;
+        setTimeout(this.getExif.bind(this), 0);
+      } else {
+        this.state = STATE_ERROR;
+        setTimeout(this.handleError.bind(this, err), 0);
+      }
+      break;
+    case STATE_GETTING_EXIF:
+      if (result === RESULT_OK) {
+        this.state = STATE_AVAILABLE;
+        setTimeout(this.handleSuccess.bind(this), 0);
+      }
+      break;
     }
+  },
+
+  handleError: function handleError(err) {
+    this.photo.emitter.emit('error', err);
+  },
+
+  handleSuccess: function handleSuccess() {
+    this.photo.emitter.emit('ok', this.photo);
   }
-
-  newNameQueue.push({
-    photoInfo: photoInfo
-  });
-
-  setTimeout(deque, 0);
-}
-
-// This function expects an input:
-// {
-//   albumPath: input path of album.
-//   albumName: album's unique name.
-//   photoFileName: photo's input file. (name only, no path)
-//   photoTitle: photo title.
-//   photoDescription: photo's description.
-// }
-// This function returns an event emitter. The event emitter is guaranteed
-// to be called at least once.
-// There are 2 events: 'ok' and 'error'.
-// 'ok' is called when the process is done. the call back is function(photoInfo)
-// A photoInfo object contains:
-// {
-//   title:     Photo title
-//   desc:      Photo description
-//   name:      Name of the output photo folder.
-//   albumName: Unique name of the album that contains this photo.
-//   exif:      A map of exif, if the photo contains exif information.
-//   tags:      A list of tag of th photo.
-// }
-// 'error' is called when error occurs, with an error object.
-exports.processPhoto = function processPhoto(initPhotoInfo) {
-  var e = new EventEmitter(),
-      photoInfo = {
-        title: initPhotoInfo.photoTitle,
-        desc: initPhotoInfo.photoDescription,
-        originalFilePathName: initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
-        originalFileName: initPhotoInfo.photoFileName,
-        albumName: initPhotoInfo.albumName,
-        emitter: e,
-        tags: initPhotoInfo.tags || []
-      };
-
-  // Lazy initialize.
-  if (!config) config = require('./config.js').getCachedConfig();
-
-  getNewName(photoInfo);
-
-  return e;
-}
+};
 
 // Generate a static page for the photo and store to output folder.
 exports.generatePhotoPage = function generatePhotoPage(pi) {
@@ -261,3 +305,5 @@ exports.getPhotoInfos = function getPhotoInfos(photoNames) {
   });
   return res;
 }
+
+exports.Processor = Processor;

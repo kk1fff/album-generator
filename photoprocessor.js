@@ -44,8 +44,18 @@ var RESULT_ERROR           = 1;
 var RESULT_FILE_READY      = 2;
 var RESULT_PROCESS_PHOTO   = 3;
 
+var Photo = function Photo(photoInfo) {
+  this.title = photoInfo.photoTitle;
+  this.desc = photoInfo.photoDescription;
+  this.albumPath = photoInfo.albumPath;
+  this.originalFilePathName = photoInfo.albumPath + "/" + photoInfo.photoFileName;
+  this.originalFileName = photoInfo.photoFileName;
+  this.albumName = photoInfo.albumName;
+  this.tags = photoInfo.tags || []
+}
+
 var Processor = function Processor(photoInfo) {
-  this.initPhotoInfo = photoInfo;
+  this.photo = new Photo(photoInfo);
   this.state = STATE_AVAILABLE;
 }
 
@@ -166,24 +176,13 @@ Processor.prototype = {
   // }
   // 'error' is called when error occurs, with an error object.
   processPhoto: function processPhoto() {
-    var e = new EventEmitter(),
-        initPhotoInfo = this.initPhotoInfo;
-
-    this.photo = {
-      title: initPhotoInfo.photoTitle,
-      desc: initPhotoInfo.photoDescription,
-      originalFilePathName: initPhotoInfo.albumPath + "/" + initPhotoInfo.photoFileName,
-      originalFileName: initPhotoInfo.photoFileName,
-      albumName: initPhotoInfo.albumName,
-      emitter: e,
-      tags: initPhotoInfo.tags || []
-    };
+    this.emitter = new EventEmitter();
 
     // Lazy initialize.
     if (!config) config = require('./config.js').getCachedConfig();
 
     this.onOperationDone(RESULT_PROCESS_PHOTO);
-    return e;
+    return this.emitter;
   },
 
   getNewName: function getNewName() {
@@ -259,11 +258,11 @@ Processor.prototype = {
   },
 
   handleError: function handleError(err) {
-    this.photo.emitter.emit('error', err);
+    this.emitter.emit('error', err);
   },
 
   handleSuccess: function handleSuccess() {
-    this.photo.emitter.emit('ok', this.photo);
+    this.emitter.emit('ok', this.photo);
   }
 };
 

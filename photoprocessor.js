@@ -52,17 +52,13 @@ var Photo = function Photo(photoInfo) {
   this.originalFileName = photoInfo.photoFileName;
   this.albumName = photoInfo.albumName;
   this.tags = photoInfo.tags || []
-}
 
-var Processor = function Processor(photoInfo) {
-  this.photo = new Photo(photoInfo);
   this.state = STATE_AVAILABLE;
 }
 
-Processor.prototype = {
-  shrink: function shrink() {
+Photo.prototype = {
+  _doShrink: function _doShrink() {
     var waitingShrinking = 0,
-        photo = this.photo,
         self = this;
     function onShrunk() {
       waitingShrinking--;
@@ -73,8 +69,8 @@ Processor.prototype = {
 
     config.imageSizes.forEach(function (size) {
       waitingShrinking++;
-      console.log("Shrink " + photo.originalFilePathName + " to " + size + "px");
-      var ee = ii.shrinkSize(size, photo.originalFilePathName, photo.photoDir + "/" + size + ".jpg");
+      console.log("Shrink " + self.originalFilePathName + " to " + size + "px");
+      var ee = ii.shrinkSize(size, self.originalFilePathName, self.photoDir + "/" + size + ".jpg");
       ee.on('ok', function() {
         onShrunk();
       });
@@ -88,8 +84,8 @@ Processor.prototype = {
     // Square images
     config.squareImageSizes.forEach(function (size) {
       waitingShrinking++;
-      console.log("Shrink " + photo.originalFilePathName + " to " + size + "px");
-      var ee = ii.squareThumbnail(size, photo.originalFilePathName, photo.photoDir + "/" + size + "s.jpg");
+      console.log("Shrink " + self.originalFilePathName + " to " + size + "px");
+      var ee = ii.squareThumbnail(size, self.originalFilePathName, self.photoDir + "/" + size + "s.jpg");
       ee.on('ok', function() {
         onShrunk();
       });
@@ -101,22 +97,21 @@ Processor.prototype = {
     });
   },
 
-  getExif: function getExif() {
-    var photo = this.photo,
-        self = this,
-        ee = ei.getExif(photo.originalFilePathName);
+  _doGetExif: function _doGetExif() {
+    var self = this,
+        ee = ei.getExif(this.originalFilePathName);
     ee.on('ok', function(exif, tag) {
-      photo.exif = exif;
-      photo.tags = photo.tags.concat(tag);
-      self.addTagsOfPhoto();
+      self.exif = exif;
+      self.tags = self.tags.concat(tag);
+      self._addTagsOfPhoto();
 
       // Add additional info to photo
-      photo.thumbnailUrl = config.httpPrefix + "/" + photo.name + "/" + config.thumbnailName;
-      photo.littleThumbnailUrl = config.httpPrefix + "/" + photo.name + "/" + config.littleThumbnailName;
-      photo.pageUrl = config.httpPrefix + "/" + photo.name + "/";
+      self.thumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.thumbnailName;
+      self.littleThumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.littleThumbnailName;
+      self.pageUrl = config.httpPrefix + "/" + self.name + "/";
 
       // Store to map
-      photoInfoMap[photo.name] = photo;
+      photoInfoMap[self.name] = self;
 
       self.onOperationDone(RESULT_OK);
     });
@@ -126,17 +121,15 @@ Processor.prototype = {
     });
   },
 
-  addTagsOfPhoto: function addTagsOfPhoto() {
-    var photo = this.photo;
-    photo.tags.forEach(function(tag) {
-      tagging.addTag(photo.name, tag);
+  _addTagsOfPhoto: function _addTagsOfPhoto() {
+    this.tags.forEach(function(tag) {
+      tagging.addTag(this.name, tag);
     });
   },
 
-  createPhotoDir: function createPhotoDir() {
-    var self = this,
-        photo = this.photo;
-    fs.mkdir(photo.photoDir, "755", function(err) {
+  _doCreatePhotoDir: function _doCreatePhotoDir() {
+    var self = this;
+    fs.mkdir(this.photoDir, "755", function(err) {
       if (err) {
         // This photo is already be used in other album. It's ok, we can skip
         // all futher file operations to this file and jump to exif directly.
@@ -150,6 +143,28 @@ Processor.prototype = {
 
       // Right now we have a folder for the picture
       self.onOperationDone(RESULT_OK);
+    });
+  },
+
+  _doGetNewName: function _doGetNewName() {
+    var self = this,
+        sha1 = crypto.createHash('sha1'),
+        gettingHash;
+
+    // We take title and desc into hash code, so the same photos but with different
+    // titles and descs will be different folder.
+    if (this.title) sha1.update(this.title);
+    if (this.desc) sha1.update(this.desc);
+
+    gettingHash = fsQueue.getHash(sha1, this.originalFilePathName);
+    gettingHash.on('ok', function(hash) {
+      self.name = "photo-" + self.albumName + "-" + hash.digest('hex');
+      self.photoDir = config.outputDir + '/' + self.name;
+      self.onOperationDone(RESULT_OK);
+    });
+
+    gettingHash.on('error', function(err) {
+      self.onOperationDone(RESULT_ERROR, err);
     });
   },
 
@@ -185,41 +200,18 @@ Processor.prototype = {
     return this.emitter;
   },
 
-  getNewName: function getNewName() {
-    var self = this,
-        sha1 = crypto.createHash('sha1'),
-        photo = this.photo,
-        gettingHash;
-
-    // We take title and desc into hash code, so the same photos but with different
-    // titles and descs will be different folder.
-    if (photo.title) sha1.update(photo.title);
-    if (photo.desc) sha1.update(photo.desc);
-
-    gettingHash = fsQueue.getHash(sha1, photo.originalFilePathName);
-    gettingHash.on('ok', function(hash) {
-      photo.name = "photo-" + photo.albumName + "-" + hash.digest('hex');
-      photo.photoDir = config.outputDir + '/' + photo.name;
-      self.onOperationDone(RESULT_OK);
-    });
-
-    gettingHash.on('error', function(err) {
-      self.onOperationDone(RESULT_ERROR, err);
-    });
-  },
-
   onOperationDone: function onOperationDone(result, err) {
     switch (this.state) {
     case STATE_AVAILABLE:
       if (result === RESULT_PROCESS_PHOTO) {
         this.state = STATE_GETTING_NEW_NAME;
-        setTimeout(this.getNewName.bind(this), 0);
+        setTimeout(this._doGetNewName.bind(this), 0);
       }
       break;
     case STATE_GETTING_NEW_NAME:
       if (result === RESULT_OK) {
         this.state = STATE_CREATING_DIR;
-        setTimeout(this.createPhotoDir.bind(this), 0);
+        setTimeout(this._doCreatePhotoDir.bind(this), 0);
       } else {
         this.state = STATE_ERROR;
         setTimeout(this.handleError.bind(this, err), 0);
@@ -229,11 +221,11 @@ Processor.prototype = {
       if (result === RESULT_OK) {
         // Shrink image
         this.state = STATE_SHRINKING_IMAGE;
-        setTimeout(this.shrink.bind(this), 0);
+        setTimeout(this._doShrink.bind(this), 0);
       } else if (result === RESULT_FILE_READY) {
         // File is already there. Just get EXIF.
         this.state = STATE_GETTING_EXIF;
-        setTimeout(this.getExif.bind(this), 0);
+        setTimeout(this._doGetExif.bind(this), 0);
       } else {
         this.state = STATE_ERROR;
         setTimeout(this.handleError.bind(this, err), 0);
@@ -242,7 +234,7 @@ Processor.prototype = {
     case STATE_SHRINKING_IMAGE:
       if (result === RESULT_OK) {
         this.state = STATE_GETTING_EXIF;
-        setTimeout(this.getExif.bind(this), 0);
+        setTimeout(this._doGetExif.bind(this), 0);
       } else {
         this.state = STATE_ERROR;
         setTimeout(this.handleError.bind(this, err), 0);
@@ -262,7 +254,7 @@ Processor.prototype = {
   },
 
   handleSuccess: function handleSuccess() {
-    this.emitter.emit('ok', this.photo);
+    this.emitter.emit('ok', this);
   }
 };
 
@@ -305,4 +297,4 @@ exports.getPhotoInfos = function getPhotoInfos(photoNames) {
   return res;
 }
 
-exports.Processor = Processor;
+exports.Photo = Photo;

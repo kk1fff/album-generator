@@ -1,6 +1,6 @@
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a><span class="title"><%= photo.title %></span></div>
 <div class="photo-container">
-  <a href="<%= photo.nextUrl %>"><img class="photo" src="1000.jpg"
+  <a href="<%= photo.nextUrl %>"><img class="photo" src="<%= photo.photoImageUrl %>"
 <% if (photo.desc && photo.desc.length>0) { %>title="<%= photo.desc %>"<% } %>
 /></a>
 </div>

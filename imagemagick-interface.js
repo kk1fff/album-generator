@@ -15,157 +15,46 @@
 var exec = require('./execqueue.js').exec,
     EventEmitter = require('events').EventEmitter;
 
-exports.squareThumbnail = function squareThumbnail(size, fromFile, toFile) {
-  var e = new EventEmitter();
+function getResizingCommand(fromFile, toFile, size, isThumbnail, isSquare) {
+  var isJpeg = (toFile.match(/\.jpg$/i) != null),
+      params = [],
+      resizingPostFix = isSquare ? "^" : "\\>";
 
-  exec('convert "' + fromFile + '" -thumbnail ' + size + 'x' + size + '^' +
-       ' -gravity center -extent ' + size + 'x' + size + ' "' + toFile + '"',
-       function (error, stdout, stderr) {
-         if (error !== null) {
-           console.log('ShrinkSize error: ' + error);
-           e.emit('error', error);
-         } else {
-           e.emit('ok', toFile);
-         }
-       });
-  return e;
-}
-
-exports.shrinkSize = function shrinkSize(size, fromFile, toFile) {
-  var e = new EventEmitter(),
-      qualityParam = "";
-
-  // If we produce thumbnail with very bad quality, it will be very hard
-  // to preview.
-  if (size > 300) {
-    qualityParam = "-quality 40";
+  if (isThumbnail) {
+    params.push("-thumbnail " + size + "x" + size + resizingPostFix);
   } else {
-    qualityParam = "-quality 80";
+    // Normal resize.
+    params.push("-resize " + size + "x" + size + resizingPostFix);
+    params.push("-strip");
+    if (isJpeg) {
+      params.push("-quality 60");
+    }
   }
 
-  exec('convert "' + fromFile + '" ' + 
-       [qualityParam].join(' ') +
-       ' -strip -resize ' + size + 'x' + size + '\\> "' + toFile + '"',
+  if (isSquare) {
+    params.push("-gravity center");
+    params.push("-extent " + size + "x" + size);
+  }
+
+  return 'convert "' + fromFile + '" ' + params.join(' ') + ' "' + toFile + '"';
+}
+
+exports.processImage = function processImage(fromFile, toFile,
+                                             size, isThumbnail, isSquare) {
+  var e = new EventEmitter(),
+      cmd = getResizingCommand(fromFile, toFile, size, isThumbnail, isSquare);
+
+  exec(cmd,
        function (error, stdout, stderr) {
          if (error !== null) {
-           console.log('ShrinkSize error: ' + error);
+           console.log('Executing imagemagick error. command: ' +
+                       cmd + ", error: " + error);
            e.emit('error', error);
          } else {
            e.emit('ok', toFile);
          }
        });
+
   return e;
 }
 
-// Expose desired exif entry and change the properties name and value to
-// human readable values.
-function exifFilter(exifSource) {
-  // Return the decimal representation of a ratio string, for example:
-  // "8/1" -> 8.0
-  // "4/3" -> 1.3
-  // The number will be a fixed point string number, or pass -1 to numberAfterPoint
-  // for arbitery length.
-  function parseRatio(ratio, numberAfterPoint) {
-    var match = ratio.match(/(\d+)\/?(\d*)/), av;
-    numberAfterPoint = numberAfterPoint || 1;
-    if (match[2] && match[2].length > 0) {
-      av = parseInt(match[1])/parseInt(match[2]);
-    } else {
-      av = parseInt(match[1]);
-    }
-    if (numberAfterPoint < 0) {
-      return "" + av;
-    } else {
-      return av.toFixed(numberAfterPoint);
-    }
-  }
-
-  // Processor is expeced to be function(exifname, exifvalue) and should
-  // return an object
-  // {
-  //   key - readable key. string.
-  //   val - readable exif value. string.
-  // }
-  var processors = {
-    "Artist": function(k, v) {
-      return {
-        key: k,
-        val: v
-      };
-    },
-    "FNumber": function(k, v) {
-      return {
-        key: "Aperture",
-        val: "f/" + parseRatio(v)
-      };
-    },
-    "FocalLength": function(k, v) {
-      return {
-        key: "Focal Length",
-        val: parseRatio(v) + " mm"
-      };
-    },
-    "FocalLengthIn35mmFilm": function(k, v) {
-      return {
-        key: "Focal Length in 35 mm film",
-        val: parseRatio(v) + " mm"
-      };
-    },
-    "ExposureTime": function(k, v) {
-      return {
-        key: "Exposure",
-        val: v + " sec"
-      };
-    },
-    "ISOSpeedRatings": function(k, v) {
-      return {
-        key: "ISO",
-        val: v
-      }
-    },
-    "Model": function(k, v) {
-      return {
-        key: "Model",
-        val: v
-      };
-    }
-  };
-  var output = {};
-
-  Object.keys(exifSource).forEach(function (exifEntry) {
-    // Find processor for the exf entry. If processor isn't available, don't
-    // expose this exif property.
-    var processor = processors[exifEntry];
-    if (processor) {
-      var processed = processor(exifEntry, exifSource[exifEntry]);
-      output[processed.key] = processed.val;
-    }
-  });
-
-  return output;
-}
-
-
-function formatExifToJson(plainExif) {
-  var lineArray = plainExif.split('\n');
-  var exif = {};
-  lineArray.forEach(function(line) {
-    var parsed = line.match(/exif:(\w+)=(.+)/i);
-    if (parsed) exif[parsed[1]] = parsed[2];
-  });
-  return exifFilter(exif);
-}
-
-exports.getExif = function getExif(fromFile) {
-  var e = new EventEmitter();
-  exec('identify -format "%[EXIF:*]" "' + fromFile + '"',
-       function(error, stdout, stderr) {
-         if (error !== null) {
-           console.log('GetExif error: ' + error);
-           e.emit('error', error);
-         } else {
-           e.emit('ok', formatExifToJson(stdout));
-         }
-       });
-  return e;
-}

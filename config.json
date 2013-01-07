@@ -8,10 +8,29 @@
   "jsSourceDir"    : "/clientjs",
   "albumFileName"  : "album.json",
   "httpPrefix"     : "",
-  "thumbnailName"  : "250.jpg",
-  "littleThumbnailName": "80s.jpg",
-  "imageSizes"     : [250, 1000],
-  "squareImageSizes": [80],
+  "images"         : [
+    {
+      "filename"  : "thumbnail.jpg",
+      "sizeLimit" : 250,
+      "thumbnail" : true,
+      "square"    : false
+    },
+    {
+      "filename"  : "thumbnail-square.png",
+      "sizeLimit" : 80,
+      "thumbnail" : true,
+      "square"    : true
+    },
+    {
+      "filename"  : "photo.jpg",
+      "sizeLimit" : 1000,
+      "thumbnail" : false,
+      "square"    : false
+    }
+  ],
+  "thumbnailName"  : "thumbnail.jpg",
+  "littleThumbnailName": "thumbnail-square.png",
+  "photoName"      : "photo.jpg",
   "googleanalystics": "",
   "disqus"         : ""
 }

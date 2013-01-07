@@ -67,25 +67,14 @@ Photo.prototype = {
       }
     }
 
-    config.imageSizes.forEach(function (size) {
+    console.log("Processing " + self.originalFilePathName);
+    config.images.forEach(function (imageConfig) {
       waitingShrinking++;
-      console.log("Shrink " + self.originalFilePathName + " to " + size + "px");
-      var ee = ii.shrinkSize(size, self.originalFilePathName, self.photoDir + "/" + size + ".jpg");
-      ee.on('ok', function() {
-        onShrunk();
-      });
-      ee.on('error', function(err) {
-        console.error(err);
-        self.handleError(err);
-        onShrunk();
-      });
-    });
-
-    // Square images
-    config.squareImageSizes.forEach(function (size) {
-      waitingShrinking++;
-      console.log("Shrink " + self.originalFilePathName + " to " + size + "px");
-      var ee = ii.squareThumbnail(size, self.originalFilePathName, self.photoDir + "/" + size + "s.jpg");
+      var ee = ii.processImage(self.originalFilePathName,
+                               self.photoDir + "/" + imageConfig.filename,
+                               imageConfig.sizeLimit,
+                               imageConfig.thumbnail,
+                               imageConfig.square);
       ee.on('ok', function() {
         onShrunk();
       });
@@ -109,6 +98,7 @@ Photo.prototype = {
       self.thumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.thumbnailName;
       self.littleThumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.littleThumbnailName;
       self.pageUrl = config.httpPrefix + "/" + self.name + "/";
+      self.photoImageUrl = config.httpPrefix + "/" + self.name + "/" + config.photoName;
 
       // Store to map
       photoInfoMap[self.name] = self;

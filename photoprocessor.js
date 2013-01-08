@@ -112,8 +112,9 @@ Photo.prototype = {
   },
 
   _addTagsOfPhoto: function _addTagsOfPhoto() {
+    var self = this;
     this.tags.forEach(function(tag) {
-      tagging.addTag(this.name, tag);
+      tagging.addTag(self.name, tag);
     });
   },
 

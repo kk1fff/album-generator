@@ -60,14 +60,18 @@ Photo.prototype = {
   _doShrink: function _doShrink() {
     var waitingShrinking = 0,
         self = this;
-    function onShrunk() {
+    function onShrunk(imageConfig) {
       waitingShrinking--;
+
+      if (imageConfig) {
+        console.log("Produced image " + imageConfig.filename + " for " + self.originalFileName);
+      }
+
       if (waitingShrinking == 0) {
         self.onOperationDone(RESULT_OK);
       }
     }
 
-    console.log("Processing " + self.originalFilePathName);
     config.images.forEach(function (imageConfig) {
       waitingShrinking++;
       var ee = ii.processImage(self.originalFilePathName,
@@ -76,7 +80,7 @@ Photo.prototype = {
                                imageConfig.thumbnail,
                                imageConfig.square);
       ee.on('ok', function() {
-        onShrunk();
+        onShrunk(imageConfig);
       });
       ee.on('error', function(err) {
         console.error(err);

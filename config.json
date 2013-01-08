@@ -10,13 +10,13 @@
   "httpPrefix"     : "",
   "images"         : [
     {
-      "filename"  : "thumbnail.jpg",
-      "sizeLimit" : 250,
+      "filename"  : "thumbnail-large.jpg",
+      "sizeLimit" : 200,
       "thumbnail" : true,
-      "square"    : false
+      "square"    : true
     },
     {
-      "filename"  : "thumbnail-square.png",
+      "filename"  : "thumbnail-small.png",
       "sizeLimit" : 80,
       "thumbnail" : true,
       "square"    : true
@@ -26,10 +26,17 @@
       "sizeLimit" : 1000,
       "thumbnail" : false,
       "square"    : false
+    },
+    {
+      "filename"  : "thumbnail-145s.png",
+      "sizeLimit" : 145,
+      "thumbnail" : true,
+      "square"    : true
     }
   ],
-  "thumbnailName"  : "thumbnail.jpg",
-  "littleThumbnailName": "thumbnail-square.png",
+  "littleThumbnailName": "thumbnail-small.png",
+  "albumThumbnailName" : "thumbnail-large.jpg",
+  "photoThumbnailName" : "thumbnail-145s.png",
   "photoName"      : "photo.jpg",
   "googleanalystics": "",
   "disqus"         : ""

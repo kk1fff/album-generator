@@ -31,7 +31,8 @@ function modifyConfig(data) {
     photoName: data.photoName,
     siteTitle: data.siteTitle,
     templateDir: __dirname + data.templateDir,
-    thumbnailName: data.thumbnailName,
+    albumThumbnailName: data.albumThumbnailName,
+    photoThumbnailName: data.photoThumbnailName,
     littleThumbnailName: data.littleThumbnailName,
   }
 };

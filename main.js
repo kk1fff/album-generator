@@ -158,7 +158,7 @@ function generateAlbumListForRendering(list) {
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
-      thumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.thumbnailName,
+      thumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.albumThumbnailName,
       littleThumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.littleThumbnailName,
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),

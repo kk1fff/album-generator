@@ -95,7 +95,7 @@ Photo.prototype = {
       self._addTagsOfPhoto();
 
       // Add additional info to photo
-      self.thumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.thumbnailName;
+      self.thumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.photoThumbnailName;
       self.littleThumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.littleThumbnailName;
       self.pageUrl = config.httpPrefix + "/" + self.name + "/";
       self.photoImageUrl = config.httpPrefix + "/" + self.name + "/" + config.photoName;

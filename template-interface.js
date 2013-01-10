@@ -14,10 +14,20 @@
 
 var EventEmitter = require('events').EventEmitter,
     _ = require('underscore'),
-    config = null,
+    config,
     cachedTemplate = {},
     cachedPageParts = {},
     pagePartWaitingQueue = {};
+
+var STATE_ERROR = 0;
+var STATE_AVAILABLE = 1;
+var STATE_GETTING_TEMPLATE_RAW_FILE = 2;
+var STATE_PREPROC_TEMPLATE = 3;
+var STATE_BUILDING_PAGE = 4;
+
+var RESULT_OK = 0;
+var RESULT_ERROR = 1;
+var RESULT_PROCESS_PAGE = 2;
 
 function getPageProperties() {
   return {
@@ -96,37 +106,109 @@ function formFullTemplate(bodyTempleate) {
   return e;
 }
 
-exports.generatePage = function generatePage(templateName, data) {
-  var e = new EventEmitter(),
-      cached = cachedTemplate[templateName],
-      renderData;
+function PageGenerator(templateName, data) {
+  this.templateName = templateName;
+  this.pageData = _.extend(data, getPageProperties());
+  this.state = STATE_AVAILABLE;
+}
 
-  // Lazy initialize.
-  if (!config) {
-    config = require('./config.js').getCachedConfig();
-  }
+PageGenerator.prototype = {
+  generatePage: function() {
+    this.emitter = new EventEmitter();
+    this.onOperationDone(RESULT_PROCESS_PAGE);
+    return this.emitter;
+  },
 
-  renderData = _.extend(data, getPageProperties());
-  if (cached) {
-    setTimeout(e.emit.bind(e, 'ok', cached(renderData)), 0);
-  } else {
-    fs.readFile(config.templateDir + "/" + templateName, 'utf8', function(err, d) {
-      if (err) {
-        e.emit('error', err);
-        return;
-      }
-      
-      var ee = formFullTemplate(d);
-      ee.on('ok', function(templ) {
-        cached = _.template(templ);
-        cachedTemplate[templateName] = cached;
-        e.emit('ok', cached(renderData));
-      });
-      ee.on('error', function(err) {
-        e.emit('error', err);
-      });
+  _buildPage: function _buildPage() {
+    var template = _.template(this.preprocessedTemplate);
+    delete this.preprocessedTemplate;
+    this.resultPage = template(this.pageData);
+    this.onOperationDone(RESULT_OK);
+  },
+
+  _preprocessTemplate: function _preprocessTemplate() {
+    var ee = formFullTemplate(this.rawTemplate),
+        self = this;
+    delete this.rawTemplate;
+    ee.on('ok', function(templ) {
+      self.preprocessedTemplate = cachedTemplate[self.templateName] = templ;
+      self.onOperationDone(RESULT_OK);
     });
+    ee.on('error', function(err) {
+      self.onOperationDone(RESULT_ERROR, err);
+    });
+  },
+
+  _getTemplateRawFile: function _getTemplateRawFile() {
+    var cached = cachedTemplate[this.templateName],
+        self = this;
+    if (cached) {
+      this.preprocessedTemplate = cached;
+      this.onOperationDone(RESULT_GOT_CACHED_TEMPLATE);
+    } else {
+      fs.readFile(config.templateDir + "/" + this.templateName,
+                  'utf8', function(err, d) {
+        if (err) {
+          self.onOperationDone(RESULT_ERROR, err);
+        } else {
+          self.rawTemplate = d;
+          self.onOperationDone(RESULT_OK);
+        }
+      });
+    };
+  },
+
+  onOperationDone: function(result, err) {
+    switch(this.state) {
+    case STATE_AVAILABLE:
+      if (result == RESULT_PROCESS_PAGE) {
+        this.state = STATE_GETTING_TEMPLATE_RAW_FILE;
+        setTimeout(this._getTemplateRawFile.bind(this), 0);
+      }
+      break;
+    case STATE_GETTING_TEMPLATE_RAW_FILE:
+      if (result == RESULT_OK) {
+        this.state = STATE_PREPROC_TEMPLATE;
+        setTimeout(this._preprocessTemplate.bind(this), 0);
+      } else if (result == RESULT_GOT_CACHED_TEMPLATE) {
+        // We can skip preprocessing.
+        this.state = STATE_BUILDING_PAGE;
+        setTimeout(this._buildPage.bind(this), 0);
+      } else {
+        this.handleError(err);
+      }
+      break;
+    case STATE_PREPROC_TEMPLATE:
+      if (result == RESULT_OK) {
+        this.state = STATE_BUILDING_PAGE;
+        setTimeout(this._buildPage.bind(this), 0);
+      } else {
+        this.handleError(err);
+      }
+      break;
+    case STATE_BUILDING_PAGE:
+      if (result == RESULT_OK) {
+        this.state = STATE_AVAILABLE;
+        this.handleSuccess();
+      } else {
+        this.handleError(err);
+      }
+      break;
+    }
+  },
+
+  handleSuccess: function handleSuccess() {
+    this.emitter.emit('ok', this.resultPage);
+  },
+
+  handleError: function handleError(err) {
+    this.emitter.emit('error', err);
   }
-  return e;
+};
+
+exports.generatePage = function generatePage(templateName, data) {
+  if (!config) config = require('./config.js').getCachedConfig();
+  var pageGenerator = new PageGenerator(templateName, data);
+  return pageGenerator.generatePage();
 }
 

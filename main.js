@@ -125,7 +125,7 @@ function generateAlbumListPage(albumList, tags) {
     });
   });
   generating.on('error', function(e) {
-    e.emit('error', err);
+    e.emit('error', e);
   });
 
   return e;

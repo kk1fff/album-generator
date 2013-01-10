@@ -49,6 +49,12 @@ View your album on the Internet.
     
 ----------
 
+## Example
+
+An example is at <a href="http://photo.patrickz.net/">Patrick's Album</a>
+
+----------
+
 I really like flickr, an album site that I can show my photos. But, it is less
 customizable. I cannot add my own adsense on that, and it gives me just 300MB
 traffic per month.

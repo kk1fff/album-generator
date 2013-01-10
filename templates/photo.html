@@ -4,7 +4,7 @@
 <% if (photo.desc && photo.desc.length>0) { %>title="<%= photo.desc %>"<% } %>
 /></a>
 </div>
-<% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>
+Tags: [<% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>]
 <% if (photo.desc && photo.desc.length>0) { %><div class="photo-description description-container"><%= photo.desc %></div><% } %>
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a><span class="title"><%= photo.title %></span></div>
 <% if (site.disqus && site.disqus.length > 0) { %>

@@ -188,7 +188,8 @@ function generateAlbumPage(albumList, albumInfo, tags) {
         albums: albumList,
         tags: tags,
         page: {
-           title: albumInfo.title
+           title: albumInfo.title,
+           desc: albumInfo.desc
         }
       }),
       e = new EventEmitter();
@@ -239,7 +240,7 @@ function generatePages(albumList) {
       generating = 0,
       tags = tagging.getTags(),
       generatingAlbumList = generateAlbumListPage(list, tags),
-      generatingTagPage = tagging.generateTagPages();
+      generatingTagPage = tagging.generateTagPages(list);
 
   function onAlbumPageGenerated() {
     generating--;

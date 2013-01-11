@@ -7,14 +7,7 @@
   <div class="photo-title"><%= p.title %></div>
 </div><% }); %>
 </div>
-<div class="side-bar">
-<div class="tag-container side-bar-section">
-<p class="title">Tags</p>
-<% tags.forEach(function(t) { %>
-<span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span>
-<% }); %>
-</div>
-</div>
+<%! sidebar.html %>
 <div class="clear-fix"></div>
 </div>
 <%! footer.html %>

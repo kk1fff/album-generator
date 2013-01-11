@@ -82,7 +82,7 @@ exports.getSimpleProperties = function getSimpleProperties(tagTitleList) {
   return ret;
 }
 
-exports.generateTagPages = function generateTagPages() {
+exports.generateTagPages = function generateTagPages(albums) {
   var tags = generateTagList(),
       generating = 0,
       e = new EventEmitter();
@@ -104,7 +104,8 @@ exports.generateTagPages = function generateTagPages() {
                                         tags: tags,
                                         page: {
                                           title: tagItem.title
-                                        }
+                                        },
+                                        albums: albums
                                       });
     generating++;
     generatingPage.on('ok', function(page) {

@@ -7,19 +7,7 @@
   <div class="photo-title"><%= p.title %></div>
 </div><% }); %>
 </div>
-<div class="side-bar">
-<% if (album.desc) { %><div class="album-description description-container"><%= album.desc %></div><% } %>
-<div class="tiny-album-list-container side-bar-section">
-<p class="title">Albums</p>
-<% albums.forEach(function (a) { %>
-<div class="image-link" to="<%= a.albumUrl %>">
-  <div class="image-container"><img src="<%= a.littleThumbnailUrl %>" class="album-list-cover"/></div>
-  <div class="describe-container">
-    <%= a.title %>
-  </div>
-</div>
-<% }) %>
-</div>
+<%! sidebar.html %>
 <div class="tag-container side-bar-section">
 <p class="title">Tags</p>
 <% tags.forEach(function(t) { %>

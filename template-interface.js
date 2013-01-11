@@ -43,67 +43,47 @@ function getPageProperties() {
 }
 
 // Load template part from file.
-function getPageParts(name) {
-  var e = new EventEmitter(),
-      cached = cachedPageParts[name];
-
-  if (cached) {
-    setTimeout(e.emit.bind(e, 'ok', cached), 0);
-  } else if (pagePartWaitingQueue[name]) {
-    // If somebody is already reading this file, queue the request.
-    pagePartWaitingQueue[name].push(e);
-  } else {
-    pagePartWaitingQueue[name] = [e];
-    fs.readFile(config.pagePartDir + "/" + name, 'utf8', function(err, d) {
-      // Notify all the waiting event emitter that we got the file (or fail).
-      var waiting = pagePartWaitingQueue[name];
-      delete pagePartWaitingQueue[name];
-      if (err) {
-        waiting.forEach(function(e) {
-          e.emit('error', err);
-        });
-        return;
-      }
-      cachedPageParts[name] = d;
-      waiting.forEach(function(e) {
-        e.emit('ok', d);
-      });
-    });
+function getPagePart(name, loadedList) {
+  var cached = cachedPageParts[name];
+  if (cached) return cached;
+  try {
+    cached = fs.readFileSync(config.pagePartDir + "/" + name, 'utf8');
+    // Process inclusion in this page part.
+    cached = formatPagePart(cached, loadedList);
+    cachedPageParts[name] = cached;
+  } catch (err) {
+    console.log("unable to load: " + name);
+    return "";
   }
-
-  return e;
+  return cached;
 }
 
-function formFullTemplate(bodyTempleate) {
-  var e = new EventEmitter(),
-      header,
-      footer,
-      loadingHeader = getPageParts('header.html'),
-      loadingFooter = getPageParts('footer.html');
+function formatPagePart(pagePartText, loadedList) {
+  var replaced;
+  loadedList = loadedList || [];
+  do {
+    // Reset replaced. If the replacer is called, it will be set true, 
+    // and we will have the next round.
+    replaced = false;
+        
+    pagePartText = pagePartText.replace(/<%![\w\. _-]+%>/, function(str) {
+      var matching = str.match(/<%!([\w\. _-]+)%>/),
+          pagePartName = matching[1].trim(),
+          pagePart;
+      replaced = true; // Tell outer that we should check again.
+      if (loadedList.indexOf(pagePartName) >= 0) {
+        // Loop
+        console.warn("Inclusion loop: " + pagePartName);
+        return "";
+      }
+      loadedList.push(pagePartName);
+      pagePart = getPagePart(pagePartName, loadedList);
+      loadedList.pop();
+      return pagePart;
+    });
+  } while(replaced);
 
-  function tryFinish() {
-    if (header && footer) {
-      e.emit('ok', header + bodyTempleate + footer);
-    }
-  }
-
-  loadingHeader.on('ok', function(data) {
-    header = data;
-    tryFinish();
-  });
-  loadingHeader.on('error', function(err) {
-    e.emit('error', err);
-  });
-
-  loadingFooter.on('ok', function(data) {
-    footer = data;
-    tryFinish();
-  });
-  loadingFooter.on('error', function(err) {
-    e.emit('error', err);
-  });
-
-  return e;
+  return pagePartText;
 }
 
 function PageGenerator(templateName, data) {
@@ -122,21 +102,19 @@ PageGenerator.prototype = {
   _buildPage: function _buildPage() {
     var template = _.template(this.preprocessedTemplate);
     delete this.preprocessedTemplate;
-    this.resultPage = template(this.pageData);
-    this.onOperationDone(RESULT_OK);
+    try {
+      this.resultPage = template(this.pageData);
+      this.onOperationDone(RESULT_OK);
+    } catch (e) {
+      console.error("Error when building template: " + this.templateName);
+      this.onOperationDone(RESULT_ERROR, e);
+    }
   },
 
   _preprocessTemplate: function _preprocessTemplate() {
-    var ee = formFullTemplate(this.rawTemplate),
-        self = this;
+    this.preprocessedTemplate = formatPagePart(this.rawTemplate),
     delete this.rawTemplate;
-    ee.on('ok', function(templ) {
-      self.preprocessedTemplate = cachedTemplate[self.templateName] = templ;
-      self.onOperationDone(RESULT_OK);
-    });
-    ee.on('error', function(err) {
-      self.onOperationDone(RESULT_ERROR, err);
-    });
+    this.onOperationDone(RESULT_OK);
   },
 
   _getTemplateRawFile: function _getTemplateRawFile() {

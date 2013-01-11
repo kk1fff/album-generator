@@ -100,10 +100,13 @@ exports.generateTagPages = function generateTagPages(albums) {
 
   tags.forEach(function(tagItem) {
     var generatingPage = generatePage('tag.html',
-                                      { tag: tagItem,
+                                      {
+                                        tag: tagItem,
                                         tags: tags,
                                         page: {
-                                          title: tagItem.title
+                                          title: tagItem.title,
+                                          enableTagListOnSidebar: true,
+                                          enableAlbumListOnSidebar: true
                                         },
                                         albums: albums
                                       });

@@ -1,5 +1,15 @@
 <div class="side-bar">
-<% if (page.desc) { %><div class="album-description description-container"><%= page.desc %></div><% } %>
+<% if (page.desc) { %><div class="side-bar-section"><div
+class="album-description description-container"><%= page.desc %></div></div><% } %>
+<% if (page.enableTagListOnSidebar) { %>
+<div class="tag-container side-bar-section">
+<p class="title">Tags</p>
+<% tags.forEach(function(t) { %>
+<span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span>
+<% }); %>
+</div>
+<% } // page.enableTagListOnSidebar %>
+<% if (page.enableAlbumListOnSidebar) { %>
 <div class="tiny-album-list-container side-bar-section">
 <p class="title">Albums</p>
 <% albums.forEach(function (a) { %>
@@ -10,4 +20,6 @@
   </div>
 </div>
 <% }) %>
+</div>
+<% } // page.enableAlbumListOnSidebar %>
 </div>

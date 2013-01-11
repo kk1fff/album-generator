@@ -112,7 +112,8 @@ function generateAlbumListPage(albumList, tags) {
     albums: albumList,
     tags: tags,
     page: {
-      title: "Album List"
+      title: "Album List",
+      enableTagListOnSidebar: true
     }
   });
   generating.on('ok', function(page) {
@@ -188,8 +189,10 @@ function generateAlbumPage(albumList, albumInfo, tags) {
         albums: albumList,
         tags: tags,
         page: {
-           title: albumInfo.title,
-           desc: albumInfo.desc
+          title: albumInfo.title,
+          desc: albumInfo.desc,
+          enableAlbumListOnSidebar: true,
+          enableTagListOnSidebar: true
         }
       }),
       e = new EventEmitter();

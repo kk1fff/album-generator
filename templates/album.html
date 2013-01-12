@@ -2,8 +2,8 @@
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><span class="title"><%= album.title %></span></div>
 <div class="content-container">
 <div class="content-area photo-preview-container">
-<% album.photos.forEach(function(p) { %><div class="image-link photo-row" to="<%= p.pageUrl %>">
-  <div class="image-container"><img src="<%= p.thumbnailUrl %>" /></div>
+<% album.photos.forEach(function(p) { %><div class="image-link photo-row" to="<%= p.pageUrl() %>">
+  <div class="image-container"><img src="<%= p.thumbnailUrl() %>" /></div>
   <div class="photo-title"><%= p.title %></div>
 </div><% }); %>
 </div>

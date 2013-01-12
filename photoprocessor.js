@@ -57,6 +57,26 @@ var Photo = function Photo(photoInfo) {
 }
 
 Photo.prototype = {
+  pageUrl: function pageUrl() {
+    if (!this.name) return null;
+    return config.httpPrefix + "/" + this.name + "/";
+  },
+
+  thumbnailUrl: function thumbnailUrl() {
+    if (!this.name) return null;
+    return config.httpPrefix + "/" + this.name + "/" + config.photoThumbnailName;
+  },
+
+  littleThumbnailUrl: function littleThumbnailUrl() {
+    if (!this.name) return null;
+    return config.httpPrefix + "/" + this.name + "/" + config.littleThumbnailName;
+  },
+
+  photoImageUrl: function photoImageUrl() {
+    if (!this.name) return null;
+    return config.httpPrefix + "/" + this.name + "/" + config.photoName;
+  },
+
   _doShrink: function _doShrink() {
     var waitingShrinking = 0,
         self = this;
@@ -96,17 +116,6 @@ Photo.prototype = {
     ee.on('ok', function(exif, tag) {
       self.exif = exif;
       self.tags = self.tags.concat(tag);
-      self._addTagsOfPhoto();
-
-      // Add additional info to photo
-      self.thumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.photoThumbnailName;
-      self.littleThumbnailUrl = config.httpPrefix + "/" + self.name + "/" + config.littleThumbnailName;
-      self.pageUrl = config.httpPrefix + "/" + self.name + "/";
-      self.photoImageUrl = config.httpPrefix + "/" + self.name + "/" + config.photoName;
-
-      // Store to map
-      photoInfoMap[self.name] = self;
-
       self.onOperationDone(RESULT_OK);
     });
 
@@ -249,6 +258,8 @@ Photo.prototype = {
   },
 
   handleSuccess: function handleSuccess() {
+    this._addTagsOfPhoto();
+    photoInfoMap[this.name] = this;
     this.emitter.emit('ok', this);
   }
 };
@@ -281,6 +292,10 @@ exports.generatePhotoPage = function generatePhotoPage(pi) {
   });
 
   return e;
+}
+
+exports.getPhotoInfo = function(photoName) {
+  return photoInfoMap[photoName];
 }
 
 exports.getPhotoInfos = function getPhotoInfos(photoNames) {

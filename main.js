@@ -147,8 +147,8 @@ function generateAlbumListForRendering(list) {
       var prev = i - 1;
       if (next >= result.length) next = 0;
       if (prev < 0) prev = result.length - 1;
-      p.prevUrl = config.httpPrefix + "/" + result[prev].name;
-      p.nextUrl = config.httpPrefix + "/" + result[next].name;
+      p.prevUrl = result[prev].pageUrl();
+      p.nextUrl = result[next].pageUrl();
       p.albumTitle = containingAlbum.title || "No title";
       p.albumUrl = getAlbumUrl(containingAlbum);
     });
@@ -159,8 +159,8 @@ function generateAlbumListForRendering(list) {
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
-      thumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.albumThumbnailName,
-      littleThumbnailUrl: config.httpPrefix + "/" + a.cover + "/" + config.littleThumbnailName,
+      thumbnailUrl: pp.getPhotoInfo(a.cover).thumbnailUrl(),
+      littleThumbnailUrl: pp.getPhotoInfo(a.cover).littleThumbnailUrl(),
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos, a),

@@ -25,6 +25,7 @@ var crypto        = require('crypto'),
     generatePage  = require('./template-interface.js').generatePage,
     fsQueue       = require('./fs-queue.js'),
     tagging       = require('./tagging.js'),
+    util          = require('./util.js'),
     config        = null,
     newNameQueue       = [],
     runningNewNameTask = 0,
@@ -38,45 +39,21 @@ var STATE_GETTING_NEW_NAME = 2;
 var STATE_CREATING_DIR     = 3;
 var STATE_SHRINKING_IMAGE  = 4;
 var STATE_GETTING_EXIF     = 5;
+var STATE_PROCSSING_PHOTO  = 6;
 
-var RESULT_OK              = 0;
-var RESULT_ERROR           = 1;
-var RESULT_FILE_READY      = 2;
-var RESULT_PROCESS_PHOTO   = 3;
+var RESULT_OK                 = 0;
+var RESULT_ERROR              = 1;
+var RESULT_FILE_READY         = 2;
+var RESULT_PROCESS_PHOTO      = 3;
+var RESULT_PROCESS_PHOTO_PAGE = 4;
 
-var Photo = function Photo(photoInfo) {
-  this.title = photoInfo.photoTitle;
-  this.desc = photoInfo.photoDescription;
-  this.albumPath = photoInfo.albumPath;
-  this.originalFilePathName = photoInfo.albumPath + "/" + photoInfo.photoFileName;
-  this.originalFileName = photoInfo.photoFileName;
-  this.albumName = photoInfo.albumName;
-  this.tags = photoInfo.tags || []
-
+function Photo(sourcePath, sourcePhoto) {
+  this.sourcePhotoPathName = sourcePath + "/" + sourcePhoto;
+  this.sourcePhoto = sourcePhoto;
   this.state = STATE_AVAILABLE;
 }
 
 Photo.prototype = {
-  pageUrl: function pageUrl() {
-    if (!this.name) return null;
-    return config.httpPrefix + "/" + this.name + "/";
-  },
-
-  thumbnailUrl: function thumbnailUrl() {
-    if (!this.name) return null;
-    return config.httpPrefix + "/" + this.name + "/" + config.photoThumbnailName;
-  },
-
-  littleThumbnailUrl: function littleThumbnailUrl() {
-    if (!this.name) return null;
-    return config.httpPrefix + "/" + this.name + "/" + config.littleThumbnailName;
-  },
-
-  photoImageUrl: function photoImageUrl() {
-    if (!this.name) return null;
-    return config.httpPrefix + "/" + this.name + "/" + config.photoName;
-  },
-
   _doShrink: function _doShrink() {
     var waitingShrinking = 0,
         self = this;
@@ -84,7 +61,7 @@ Photo.prototype = {
       waitingShrinking--;
 
       if (imageConfig) {
-        console.log("Produced image " + imageConfig.filename + " for " + self.originalFileName);
+        console.log("Produced image " + imageConfig.filename + " for " + self.sourcePhoto);
       }
 
       if (waitingShrinking == 0) {
@@ -94,7 +71,7 @@ Photo.prototype = {
 
     config.images.forEach(function (imageConfig) {
       waitingShrinking++;
-      var ee = ii.processImage(self.originalFilePathName,
+      var ee = ii.processImage(self.sourcePhotoPathName,
                                self.photoDir + "/" + imageConfig.filename,
                                imageConfig.sizeLimit,
                                imageConfig.thumbnail,
@@ -107,27 +84,6 @@ Photo.prototype = {
         self.handleError(err);
         onShrunk();
       });
-    });
-  },
-
-  _doGetExif: function _doGetExif() {
-    var self = this,
-        ee = ei.getExif(this.originalFilePathName);
-    ee.on('ok', function(exif, tag) {
-      self.exif = exif;
-      self.tags = self.tags.concat(tag);
-      self.onOperationDone(RESULT_OK);
-    });
-
-    ee.on('error', function(err) {
-      self.onOperationDone(RESULT_ERROR, err);
-    });
-  },
-
-  _addTagsOfPhoto: function _addTagsOfPhoto() {
-    var self = this;
-    this.tags.forEach(function(tag) {
-      tagging.addTag(self.name, tag);
     });
   },
 
@@ -145,6 +101,9 @@ Photo.prototype = {
         return;
       }
 
+      // Put an index.html to prevent accessing dir list
+      fs.writeFileSync(self.photoDir + "/index.html", " ", "utf8");
+
       // Right now we have a folder for the picture
       self.onOperationDone(RESULT_OK);
     });
@@ -155,14 +114,10 @@ Photo.prototype = {
         sha1 = crypto.createHash('sha1'),
         gettingHash;
 
-    // We take title and desc into hash code, so the same photos but with different
-    // titles and descs will be different folder.
-    if (this.title) sha1.update(this.title);
-    if (this.desc) sha1.update(this.desc);
-
-    gettingHash = fsQueue.getHash(sha1, this.originalFilePathName);
+    gettingHash = fsQueue.getHash(sha1, this.sourcePhotoPathName);
     gettingHash.on('ok', function(hash) {
-      self.name = "photo-" + self.albumName + "-" + hash.digest('hex');
+      self.hash = hash.digest('hex');
+      self.name = "photo-" + self.hash;
       self.photoDir = config.outputDir + '/' + self.name;
       self.onOperationDone(RESULT_OK);
     });
@@ -172,42 +127,30 @@ Photo.prototype = {
     });
   },
 
-  // This function expects an input:
-  // {
-  //   albumPath: input path of album.
-  //   albumName: album's unique name.
-  //   photoFileName: photo's input file. (name only, no path)
-  //   photoTitle: photo title.
-  //   photoDescription: photo's description.
-  // }
-  // This function returns an event emitter. The event emitter is guaranteed
-  // to be called at least once.
-  // There are 2 events: 'ok' and 'error'.
-  // 'ok' is called when the process is done. the call back is function(photoInfo)
-  // A photoInfo object contains:
-  // {
-  //   title:     Photo title
-  //   desc:      Photo description
-  //   name:      Name of the output photo folder.
-  //   albumName: Unique name of the album that contains this photo.
-  //   exif:      A map of exif, if the photo contains exif information.
-  //   tags:      A list of tag of th photo.
-  // }
-  // 'error' is called when error occurs, with an error object.
+  _doGetExif: function _doGetExif() {
+    var self = this,
+        ee = ei.getExif(this.sourcePhotoPathName);
+    ee.on('ok', function(exif, tags) {
+      self.exif = exif;
+      self.tags = tags;
+      self.onOperationDone(RESULT_OK);
+    });
+
+    ee.on('error', function(err) {
+      self.onOperationDone(RESULT_ERROR, err);
+    });
+  },
+
   processPhoto: function processPhoto() {
     this.emitter = new EventEmitter();
-
-    // Lazy initialize.
-    if (!config) config = require('./config.js').getCachedConfig();
-
     this.onOperationDone(RESULT_PROCESS_PHOTO);
     return this.emitter;
   },
 
-  onOperationDone: function onOperationDone(result, err) {
+  onOperationDone: function(result, err) {
     switch (this.state) {
     case STATE_AVAILABLE:
-      if (result === RESULT_PROCESS_PHOTO) {
+      if (result == RESULT_PROCESS_PHOTO) {
         this.state = STATE_GETTING_NEW_NAME;
         setTimeout(this._doGetNewName.bind(this), 0);
       }
@@ -250,6 +193,126 @@ Photo.prototype = {
         setTimeout(this.handleSuccess.bind(this), 0);
       }
       break;
+
+    }
+  },
+
+  handleError: function handleError(err) {
+    this.emitter.emit('error', err);
+  },
+
+  handleSuccess: function handleSuccess() {
+    this.emitter.emit('ok', this);
+  }
+};
+
+function PhotoPage(photoInfo) {
+  this.title = photoInfo.photoTitle;
+  this.desc = photoInfo.photoDescription;
+  this.sourcePath = photoInfo.sourcePath;
+  this.originalFilePathName = photoInfo.sourcePath + "/" + photoInfo.photoFileName;
+  this.originalFileName = photoInfo.photoFileName;
+  this.albumName = photoInfo.albumName;
+  this.tags = photoInfo.tags || []
+  this.state = STATE_AVAILABLE;
+}
+
+PhotoPage.prototype = {
+  name: function name() {
+    if (!this._photoHash) return null;
+    return "photopage-" + this.albumName + "-" + 
+      util.getSafeName(this.originalFileName) + "-" + this._photoHash;
+  },
+
+  pageUrl: function pageUrl() {
+    if (!this.name()) return null;
+    return config.httpPrefix + "/" + this.name() + ".html";
+  },
+
+  thumbnailUrl: function thumbnailUrl() {
+    if (!this._photoHash) return null;
+    return config.httpPrefix + "/" + this._photoName + "/" + config.photoThumbnailName;
+  },
+
+  littleThumbnailUrl: function littleThumbnailUrl() {
+    if (!this._photoName) return null;
+    return config.httpPrefix + "/" + this._photoName + "/" + config.littleThumbnailName;
+  },
+
+  photoImageUrl: function photoImageUrl() {
+    if (!this._photoName) return null;
+    return config.httpPrefix + "/" + this._photoName + "/" + config.photoName;
+  },
+
+  _doProcessPhoto: function _doProcessPhoto() {
+    var photo = new Photo(this.sourcePath, this.originalFileName),
+        ee = photo.processPhoto(),
+        self = this;
+    ee.on('ok', function() {
+      // Photo is generated, copy photo's file information.
+      self._photoName = photo.name;
+      self._photoHash = photo.hash;
+      self.exif = photo.exif;
+      self.tags = self.tags.concat(photo.tags);
+      self.onOperationDone(RESULT_OK);
+    });
+
+    ee.on('error', function(err) {
+      self.onOperationDone(RESULT_ERROR, err);
+    });
+  },
+
+  _addTagsOfPhoto: function _addTagsOfPhoto() {
+    var self = this;
+    this.tags.forEach(function(tag) {
+      tagging.addTag(self.name(), tag);
+    });
+  },
+
+  // This function expects an input:
+  // {
+  //   sourcePath: input path of album.
+  //   albumName: album's unique name.
+  //   photoFileName: photo's input file. (name only, no path)
+  //   photoTitle: photo title.
+  //   photoDescription: photo's description.
+  // }
+  // This function returns an event emitter. The event emitter is guaranteed
+  // to be called at least once.
+  // There are 2 events: 'ok' and 'error'.
+  // 'ok' is called when the process is done. the call back is function(photoInfo)
+  // A photoInfo object contains:
+  // {
+  //   title:     Photo title
+  //   desc:      Photo description
+  //   name:      Name of the output photo folder.
+  //   albumName: Unique name of the album that contains this photo.
+  //   exif:      A map of exif, if the photo contains exif information.
+  //   tags:      A list of tag of th photo.
+  // }
+  // 'error' is called when error occurs, with an error object.
+  processPhotoPage: function processPhotoPage() {
+    this.emitter = new EventEmitter();
+
+    // Lazy initialize.
+    if (!config) config = require('./config.js').getCachedConfig();
+    this.onOperationDone(RESULT_PROCESS_PHOTO_PAGE);
+
+    return this.emitter;
+  },
+
+  onOperationDone: function onOperationDone(result, err) {
+    switch (this.state) {
+    case STATE_AVAILABLE:
+      if (result === RESULT_PROCESS_PHOTO_PAGE) {
+        this.state = STATE_PROCSSING_PHOTO;
+        setTimeout(this._doProcessPhoto.bind(this), 0);
+      }
+      break;
+    case STATE_PROCSSING_PHOTO:
+      if (result === RESULT_OK) {
+        this.handleSuccess();
+      }
     }
   },
 
@@ -259,7 +322,7 @@ Photo.prototype = {
 
   handleSuccess: function handleSuccess() {
     this._addTagsOfPhoto();
-    photoInfoMap[this.name] = this;
+    photoInfoMap[this.name()] = this;
     this.emitter.emit('ok', this);
   }
 };
@@ -279,7 +342,7 @@ exports.generatePhotoPage = function generatePhotoPage(pi) {
   generatingPage.on('ok', function(page) {
     console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
     if (config.debug) console.log('Page is generated: ' + page);
-    fsQueue.writeFile(pi.photoDir + '/index.html', page, 'utf8', function(err) {
+    fsQueue.writeFile(config.outputDir + "/" + pi.name() + '.html', page, 'utf8', function(err) {
       if (err) {
         e.emit('error', err);
       } else {
@@ -307,4 +370,4 @@ exports.getPhotoInfos = function getPhotoInfos(photoNames) {
   return res;
 }
 
-exports.Photo = Photo;
+exports.Photo = PhotoPage;

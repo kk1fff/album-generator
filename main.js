@@ -38,7 +38,7 @@ function processAlbum(albumPath) {
     //     album info.
     realAlbum.photos = [];
     var processingPhoto = 0;
-    var nameMap = [];
+    var photoMap = [];
 
     function onProcessedOnePhoto(success, photo, originalIndex, photoInfo) {
       processingPhoto--;
@@ -50,7 +50,7 @@ function processAlbum(albumPath) {
         // Finalize album info.
         realAlbum.title = albumConfig.title || albumPath;
         realAlbum.desc = albumConfig.desc;
-        realAlbum.cover = nameMap[albumConfig.cover || 0];
+        realAlbum.cover = photoMap[albumConfig.cover || 0];
         realAlbum.name = albumConfig.name;
         realAlbum.sortcode = albumConfig.sortcode || -1;
         e.emit('ok', realAlbum);
@@ -64,15 +64,15 @@ function processAlbum(albumPath) {
       photo.title = photo.title || photo.file;
 
       var pprocessor = new pp.Photo({
-        albumPath:        albumPath,
+        sourcePath:       albumPath,
         albumName:        getAlbumName(albumConfig),
         photoFileName:    photo.file,
         photoTitle:       photo.title,
         photoDescription: photo.desc
       });
-      var ee = pprocessor.processPhoto();
+      var ee = pprocessor.processPhotoPage();
       ee.on('ok', function(photoInfo) {
-        nameMap[i] = photoInfo.name;
+        photoMap[i] = photoInfo;
         onProcessedOnePhoto(true, photo, i, photoInfo);
       });
       ee.on('error', function(err) {
@@ -159,8 +159,8 @@ function generateAlbumListForRendering(list) {
   var listForRendering = [];
   list.forEach(function(a) {
     listForRendering.push({
-      thumbnailUrl: pp.getPhotoInfo(a.cover).thumbnailUrl(),
-      littleThumbnailUrl: pp.getPhotoInfo(a.cover).littleThumbnailUrl(),
+      thumbnailUrl: a.cover.thumbnailUrl(),
+      littleThumbnailUrl: a.cover.littleThumbnailUrl(),
       albumUrl: getAlbumUrl(a),
       albumPageName: getAlbumFileName(a),
       photos: generatePhotoListForRendering(a.photos, a),

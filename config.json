@@ -23,20 +23,20 @@
     },
     {
       "filename"  : "photo.jpg",
-      "sizeLimit" : 1000,
+      "sizeLimit" : 695,
       "thumbnail" : false,
       "square"    : false
     },
     {
-      "filename"  : "thumbnail-145s.png",
-      "sizeLimit" : 145,
+      "filename"  : "thumbnail-170s.png",
+      "sizeLimit" : 170,
       "thumbnail" : true,
       "square"    : true
     }
   ],
   "littleThumbnailName": "thumbnail-small.png",
   "albumThumbnailName" : "thumbnail-large.jpg",
-  "photoThumbnailName" : "thumbnail-145s.png",
+  "photoThumbnailName" : "thumbnail-170s.png",
   "photoName"      : "photo.jpg",
   "googleanalystics": "",
   "disqus"         : ""

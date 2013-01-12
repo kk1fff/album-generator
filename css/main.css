@@ -35,6 +35,7 @@ a, a:visited {
 
 body {
     background-color: white;
+    overflow-x: hidden;
 }
 
 h1 {
@@ -120,14 +121,14 @@ h2 {
 }
 
 .content-area {
-    width: 600px;
+    width: 700px;
     display: block;
     float: left;
     overflow: hidden;
 }
 
 .side-bar {
-    width: 389px;
+    width: 289px;
     float: left;
     display: block;
     padding: 5px;
@@ -153,6 +154,10 @@ h2 {
     border-radius: 3px;
 }
 
+.tag a {
+    display: block;
+}
+
 .tag:hover {
     color: white;
     background-color: #333;
@@ -169,10 +174,8 @@ h2 {
 }
 
 .album-row {
-    padding: 5px;
     width: 100%;
     display: inline-block;
-    margin: 2px 0 2px 0;
 }
 
 .album-row .image-container {
@@ -205,8 +208,8 @@ h2 {
     float: none;
     text-align: left;
     position: relative;
-    width: 145px;
-    height: 145px;
+    width: 170px;
+    height: 170px;
     top: 0;
     left: 0;
 }

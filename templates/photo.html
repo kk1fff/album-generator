@@ -1,15 +1,16 @@
 <%! header.html %>
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a><span class="title"><%= photo.title %></span></div>
-<div class="photo-container">
-  <a href="<%= photo.nextUrl %>"><img class="photo" src="<%= photo.photoImageUrl() %>"
-<% if (photo.desc && photo.desc.length>0) { %>title="<%= photo.desc %>"<% } %>
-/></a>
-</div>
-Tags: [<% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>]
-<% if (photo.desc && photo.desc.length>0) { %><div class="photo-description description-container"><%= photo.desc %></div><% } %>
-<div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a><a href="<%= photo.albumUrl %>"><%= photo.albumTitle %></a><a href="<%= photo.prevUrl %>">Prev</a><a href="<%= photo.nextUrl %>">Next</a><span class="title"><%= photo.title %></span></div>
-<% if (site.disqus && site.disqus.length > 0) { %>
-<div class="disqus-container">
+<div class="content-container">
+<div class="content-area photo-preview-container">
+  <div class="photo-container">
+    <a href="<%= photo.nextUrl %>"><img class="photo" src="<%= photo.photoImageUrl() %>"
+                                        <% if (photo.desc && photo.desc.length>0) { %>title="<%= photo.desc %>"<% } %>
+      /></a>
+  </div>
+  Tags of this photo <% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>
+  <% if (photo.desc && photo.desc.length>0) { %><div class="photo-description description-container"><%= photo.desc %></div><% } %>
+  <% if (site.disqus && site.disqus.length > 0) { %>
+  <div class="disqus-container">
     <div id="disqus_thread"></div>
     <script type="text/javascript">
         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
@@ -24,18 +25,23 @@ Tags: [<% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %
     </script>
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+  <% } // disqus %>
+  <% if (photo.exif) { %>
+  <div class="exif-container">
+    <h2>Exif</h2>
+    <table class="exif-table">
+      <%
+         Object.keys(photo.exif).forEach(function (exifEntry) {
+         var exifVal = photo.exif[exifEntry];
+         %>
+      <tr class="exif-row"><td class="exif-key-cell"><%= exifEntry %></td><td class="exif-value-cell"><%= exifVal %></td></tr>
+      <% }); %>
+    </table>
+    <% } %>
+  </div>
 </div>
-<% } // disqus %>
-<% if (photo.exif) { %>
-<div class="exif-container">
-  <h2>Exif</h2>
-  <table class="exif-table">
-<%
-   Object.keys(photo.exif).forEach(function (exifEntry) {
-     var exifVal = photo.exif[exifEntry];
-%>
-<tr class="exif-row"><td class="exif-key-cell"><%= exifEntry %></td><td class="exif-value-cell"><%= exifVal %></td></tr>
-<% }); %>
-  </table>
-<% } %>
+<%! sidebar.html %>
+<div class="clear-fix"></div>
+</div>
 <%! footer.html %>

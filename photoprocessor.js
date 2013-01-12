@@ -328,13 +328,17 @@ PhotoPage.prototype = {
 };
 
 // Generate a static page for the photo and store to output folder.
-exports.generatePhotoPage = function generatePhotoPage(pi) {
+exports.generatePhotoPage = function generatePhotoPage(pi, albums) {
   if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
   var generatingPage = generatePage('photo.html',
                                     { photo: pi,
                                       tags: tagging.getSimpleProperties(pi.tags),
+                                      albums: albums,
                                       page: {
-                                        title: pi.title
+                                        title: pi.title,
+                                        desc: pi.desc,
+                                        enableTagListOnSidebar: true,
+                                        enableAlbumListOnSidebar: true
                                       }
                                     }),
       e = new EventEmitter();

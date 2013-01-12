@@ -286,7 +286,7 @@ function generatePages(albumList) {
     }
 
     a.photos.forEach(function(p) {
-      var ee = pp.generatePhotoPage(p);
+      var ee = pp.generatePhotoPage(p, list);
       ee.on('ok', function() {
         onSingleAlbumGenerated();
       });

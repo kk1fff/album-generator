@@ -10,8 +10,9 @@ class="album-description description-container"><%= page.desc %></div></div><% }
 </div>
 <% } // page.enableTagListOnSidebar %>
 <% if (page.enableAlbumListOnSidebar) { %>
-<div class="tiny-album-list-container side-bar-section">
+<div class="side-bar-section">
 <p class="title">Albums</p>
+<div class="tiny-album-list-container">
 <% albums.forEach(function (a) { %>
 <div class="image-link" to="<%= a.albumUrl %>">
   <div class="image-container"><img src="<%= a.littleThumbnailUrl %>" class="album-list-cover"/></div>
@@ -20,6 +21,7 @@ class="album-description description-container"><%= page.desc %></div></div><% }
   </div>
 </div>
 <% }) %>
+</div>
 </div>
 <% } // page.enableAlbumListOnSidebar %>
 </div>

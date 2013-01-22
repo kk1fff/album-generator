@@ -87,4 +87,12 @@ exports.getHash = function getHash(hash, path) {
     obj: null,
     args: args});
   return emitter;
-}
+};
+
+exports.mkdir = function mkdir(path, mode, callback) {
+  fsQueueAdd({
+    func: fs.mkdir,
+    obj: fs,
+    args: [path, mode, wrapCallback(callback)]
+  });
+};

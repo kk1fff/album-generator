@@ -19,11 +19,11 @@ var fs           = require('fs'),
     pp           = require('./photoprocessor.js'),
     fsQueue      = require('./fs-queue.js'),
     fileOperator = require('./file-operator.js'),
-    tagging      = require('./tagging.js');
+    tagging      = require('./tagging.js'),
+    config       = require('./config.js').getConfig();
 
 // Error Log
 var errorLog = [];
-var config = null;
 
 function processAlbum(albumPath) {
   var realAlbum = {};
@@ -147,10 +147,10 @@ function generateAlbumListForRendering(list) {
       var prev = i - 1;
       if (next >= result.length) next = 0;
       if (prev < 0) prev = result.length - 1;
-      p.prevUrl = result[prev].pageUrl();
-      p.nextUrl = result[next].pageUrl();
-      p.albumTitle = containingAlbum.title || "No title";
-      p.albumUrl = getAlbumUrl(containingAlbum);
+      p.setPrevUrl(result[prev].pageUrl());
+      p.setNextUrl(result[next].pageUrl());
+      p.setAlbumTitle(containingAlbum.title || "No title");
+      p.setAlbumUrl(getAlbumUrl(containingAlbum));
     });
 
     return result;
@@ -276,7 +276,7 @@ function generatePages(albumList) {
   list.forEach(function(a) {
     generating++;
     var ee = generateAlbumPage(list, a, tags),
-        generatingSingleAlbum = 1
+        generatingSingleAlbum = 1;
 
     function onSingleAlbumGenerated() {
       generatingSingleAlbum--;
@@ -286,7 +286,7 @@ function generatePages(albumList) {
     }
 
     a.photos.forEach(function(p) {
-      var ee = pp.generatePhotoPage(p, list);
+      var ee = p.generatePage(list);
       ee.on('ok', function() {
         onSingleAlbumGenerated();
       });
@@ -477,13 +477,4 @@ function run() {
   });
 }
 
-var loadingConfig = require('./config.js').load();
-
-loadingConfig.on('ok', function(conf) {
-  config = conf;
-  run();
-});
-
-loadingConfig.on('error', function(err) {
-  console.error('Fail to load configure: ' + err);
-});
+run();

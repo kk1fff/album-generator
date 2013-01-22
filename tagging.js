@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var EventEmitter = require('events').EventEmitter,
-    fsQueue = require('./fs-queue.js'),
-    util = require('./util.js'),
+var EventEmitter   = require('events').EventEmitter,
+    fsQueue        = require('./fs-queue.js'),
+    util           = require('./util.js'),
     photoprocessor = require('./photoprocessor.js'),
-    config,
+    template       = require('./template-interface.js'),
+    config         = require('./config.js').getConfig(),
     tagMap = {};
 
 function resolveTag() {
@@ -45,14 +46,12 @@ function getTagName(tag) {
 }
 
 function getTagUrl(tag) {
-  if (!config) config = require('./config.js').getCachedConfig()
   return config.httpPrefix + "/" + getTagName(tag) + ".html";
 }
 
 function generateTagList() {
   var ret = [];
 
-  if (!config) config = require('./config.js').getCachedConfig()
   resolveTag();
   Object.keys(tagMap).forEach(function(tag) {
     ret.push({
@@ -99,17 +98,18 @@ exports.generateTagPages = function generateTagPages(albums) {
   }
 
   tags.forEach(function(tagItem) {
-    var generatingPage = generatePage('tag.html',
-                                      {
-                                        tag: tagItem,
-                                        tags: tags,
-                                        page: {
-                                          title: tagItem.title,
-                                          enableTagListOnSidebar: true,
-                                          enableAlbumListOnSidebar: true
-                                        },
-                                        albums: albums
-                                      });
+    var generatingPage = template.generatePage(
+      'tag.html',
+      {
+        tag: tagItem,
+        tags: tags,
+        page: {
+          title: tagItem.title,
+          enableTagListOnSidebar: true,
+          enableAlbumListOnSidebar: true
+        },
+        albums: albums
+      });
     generating++;
     generatingPage.on('ok', function(page) {
       console.log('Page is generated: ' + tagItem.title);

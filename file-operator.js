@@ -13,18 +13,17 @@
 // limitations under the License.
 
 var fs           = require('fs'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
+    config       = require('./config.js').getConfig();
 
 // Error Log
 var errorLog = [];
-var config = null;
 
 // Load all subdirectories from inputDir.
 // @param onlyAlbumJsonDir true if we only need the list of directories
 //                         that have album.json.
 exports.fetchAlbumPath = function fetchAlbumPath(onlyAlbumJsonDir) {
   var e = new EventEmitter();
-  if (!config) config = require('./config.js').getCachedConfig();
 
   fs.readdir(config.inputDir, function(err, files) {
     if (err) {

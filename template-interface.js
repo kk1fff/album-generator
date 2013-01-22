@@ -13,8 +13,10 @@
 // limitations under the License.
 
 var EventEmitter = require('events').EventEmitter,
-    _ = require('underscore'),
-    config,
+    fs           = require('fs'),
+    _            = require('underscore'),
+    fsQueue      = require('./fs-queue.js'),
+    config       = require('./config.js').getConfig(),
     cachedTemplate = {},
     cachedPageParts = {},
     pagePartWaitingQueue = {};
@@ -39,7 +41,7 @@ function getPageProperties() {
       main: config.httpPrefix + "/",
       disqus: config.disqus
     }
-  }
+  };
 }
 
 // Load template part from file.
@@ -185,8 +187,30 @@ PageGenerator.prototype = {
 };
 
 exports.generatePage = function generatePage(templateName, data) {
-  if (!config) config = require('./config.js').getCachedConfig();
   var pageGenerator = new PageGenerator(templateName, data);
   return pageGenerator.generatePage();
-}
+};
+
+exports.generatePageAndStoreTo = function generatePageAndStoreTo(templateName,
+                                                                 targetFile,
+                                                                 data) {
+  var emitter = new EventEmitter(),
+      generatingPage = this.generatePage(templateName, data);
+  generatingPage.on('ok', function(page) {
+    if (config.debug) console.log('Page is generated: ' + page);
+    fsQueue.writeFile(targetFile, page, 'utf8', function(err) {
+      if (err) {
+        emitter.emit('error', err);
+      } else {
+        emitter.emit('ok');
+      }
+    });
+  });
+
+  generatingPage.on('error', function(err) {
+    emitter.emit('error', err);
+  });
+
+  return emitter;
+};
 

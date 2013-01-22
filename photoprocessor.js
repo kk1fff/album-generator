@@ -19,14 +19,15 @@
 
 var crypto        = require('crypto'),
     EventEmitter  = require('events').EventEmitter,
+    fs            = require('fs'),
     mkdirp        = require('mkdirp'),
     ii            = require('./imagemagick-interface.js'),
     ei            = require('./exiftool-interface.js'),
-    generatePage  = require('./template-interface.js').generatePage,
+    template      = require('./template-interface.js'),
     fsQueue       = require('./fs-queue.js'),
     tagging       = require('./tagging.js'),
     util          = require('./util.js'),
-    config        = null,
+    config        = require('./config.js').getConfig(),
     newNameQueue       = [],
     runningNewNameTask = 0,
     newNameTaskLimit   = 5,
@@ -89,7 +90,7 @@ Photo.prototype = {
 
   _doCreatePhotoDir: function _doCreatePhotoDir() {
     var self = this;
-    fs.mkdir(this.photoDir, "755", function(err) {
+    fsQueue.mkdir(this.photoDir, "755", function(err) {
       if (err) {
         // This photo is already be used in other album. It's ok, we can skip
         // all futher file operations to this file and jump to exif directly.
@@ -213,11 +214,27 @@ function PhotoPage(photoInfo) {
   this.originalFilePathName = photoInfo.sourcePath + "/" + photoInfo.photoFileName;
   this.originalFileName = photoInfo.photoFileName;
   this.albumName = photoInfo.albumName;
-  this.tags = photoInfo.tags || []
+  this.tags = photoInfo.tags || [];
   this.state = STATE_AVAILABLE;
 }
 
 PhotoPage.prototype = {
+  setPrevUrl: function setPrevUrl(url) {
+    this.prevUrl = url;
+  },
+
+  setNextUrl: function setNextUrl(url) {
+    this.nextUrl = url;
+  },
+
+  setAlbumTitle: function setAlbumTitle(title) {
+    this.albumTitle = title;
+  },
+
+  setAlbumUrl: function setAlbumUrl(url) {
+    this.albumUrl = url;
+  },
+
   name: function name() {
     if (!this._photoHash) return null;
     return "photopage-" + this.albumName + "-" + 
@@ -295,7 +312,6 @@ PhotoPage.prototype = {
     this.emitter = new EventEmitter();
 
     // Lazy initialize.
-    if (!config) config = require('./config.js').getCachedConfig();
     this.onOperationDone(RESULT_PROCESS_PHOTO_PAGE);
 
     return this.emitter;
@@ -324,42 +340,37 @@ PhotoPage.prototype = {
     this._addTagsOfPhoto();
     photoInfoMap[this.name()] = this;
     this.emitter.emit('ok', this);
+  },
+
+  // Generate a static page for the photo and store to output folder.
+  generatePage: function generatePage(albums) {
+    if (config.debug) console.log('Generating photo page: ' + JSON.stringify(this));
+    var generatingPage = template.generatePageAndStoreTo(
+      'photo.html',
+      config.outputDir + "/" + this.name() + '.html',
+      { photo: this,
+        tags: tagging.getSimpleProperties(this.tags),
+        albums: albums,
+        page: {
+          title: this.title,
+          desc: this.desc,
+          enableTagListOnSidebar: true,
+          enableAlbumListOnSidebar: true
+        }
+      }),
+        emitter = new EventEmitter();
+
+    generatingPage.on('ok', function(page) {
+      emitter.emit('ok');
+    });
+
+    generatingPage.on('error', function(err) {
+      emitter.emit('error', err);
+    });
+
+    return emitter;
   }
 };
-
-// Generate a static page for the photo and store to output folder.
-exports.generatePhotoPage = function generatePhotoPage(pi, albums) {
-  if (config.debug) console.log('Generating photo page: ' + JSON.stringify(pi));
-  var generatingPage = generatePage('photo.html',
-                                    { photo: pi,
-                                      tags: tagging.getSimpleProperties(pi.tags),
-                                      albums: albums,
-                                      page: {
-                                        title: pi.title,
-                                        desc: pi.desc,
-                                        enableTagListOnSidebar: true,
-                                        enableAlbumListOnSidebar: true
-                                      }
-                                    }),
-      e = new EventEmitter();
-
-  generatingPage.on('ok', function(page) {
-    console.log('Page is generated: ' + (pi.title || "for " + pi.originalFileName));
-    if (config.debug) console.log('Page is generated: ' + page);
-    fsQueue.writeFile(config.outputDir + "/" + pi.name() + '.html', page, 'utf8', function(err) {
-      if (err) {
-        e.emit('error', err);
-      } else {
-        e.emit('ok');
-      }
-    });
-  });
-  generatingPage.on('error', function(err) {
-    e.emit('error', err);
-  });
-
-  return e;
-}
 
 exports.getPhotoInfo = function(photoName) {
   return photoInfoMap[photoName];

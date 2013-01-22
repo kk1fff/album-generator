@@ -13,11 +13,11 @@
 // limitations under the License.
 
 var fs           = require('fs'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
     mkdirp       = require('mkdirp'),
     generatePage = require('./template-interface.js').generatePage,
     pp           = require('./photoprocessor.js'),
-    fsQueue      = require('./fs-queue.js')
+    fsQueue      = require('./fs-queue.js'),
     fileOperator = require('./file-operator.js'),
     tagging      = require('./tagging.js');
 

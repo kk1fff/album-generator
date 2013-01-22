@@ -261,6 +261,10 @@ PhotoPage.prototype = {
     return config.httpPrefix + "/" + this._photoName + "/" + config.photoName;
   },
 
+  getTags: function getTags() {
+    return tagging.getSimpleProperties(this.tags);
+  },
+
   _doProcessPhoto: function _doProcessPhoto() {
     var photo = new Photo(this.sourcePath, this.originalFileName),
         ee = photo.processPhoto(),
@@ -349,7 +353,7 @@ PhotoPage.prototype = {
       'photo.html',
       config.outputDir + "/" + this.name() + '.html',
       { photo: this,
-        tags: tagging.getSimpleProperties(this.tags),
+        tags: tagging.getTags(),
         albums: albums,
         page: {
           title: this.title,

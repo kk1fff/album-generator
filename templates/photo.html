@@ -7,7 +7,7 @@
                                         <% if (photo.desc && photo.desc.length>0) { %>title="<%= photo.desc %>"<% } %>
       /></a>
   </div>
-  Tags of this photo <% tags.forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>
+  Tags of this photo <% photo.getTags().forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>
   <% if (photo.desc && photo.desc.length>0) { %><div class="photo-description description-container"><%= photo.desc %></div><% } %>
   <% if (site.disqus && site.disqus.length > 0) { %>
   <div class="disqus-container">

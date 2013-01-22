@@ -100,30 +100,51 @@ function getAlbumUrl(albumInfo) {
   return config.httpPrefix + "/" + getAlbumFileName(albumInfo);
 }
 
-function generateAlbumListPage(albumList, tags) {
-  var e = new EventEmitter();
+function getAlbumListFileNameByOffset(offset, limit) {
+  if (offset < 0) return null;
+  if (limit && offset >= limit) return null;
+  if (offset == 0) return 'index.html';
+  return "albumlist-" + Math.floor(offset / config.albumsPerPage) + ".html";
+}
 
-  var generating = template.generatePage('album-list.html', {
-    albums: albumList,
-    tags: tags,
-    page: {
-      title: "Album List",
-      enableTagListOnSidebar: true
-    }
-  });
-  generating.on('ok', function(page) {
-    fs.writeFile(config.outputDir + '/index.html', page, function(err) {
-      if (err) {
-        e.emit('error', err);
-      } else {
-        e.emit('ok');
+function makeAlbumListPageUrl(filename) {
+  if (!filename) return null;
+  return config.httpPrefix + "/" + filename;
+}
+
+function generateAlbumListSinglePage(albumList, tags, offset, emitter) {
+  if (config.debug) console.log("Generate single page: " + offset + ", length: " + albumList.length + ", next: " + makeAlbumListPageUrl(getAlbumListFileNameByOffset(offset + config.albumsPerPage, albumList.length)));
+  var generating = template.generatePageAndStoreTo(
+    'album-list.html',
+    config.outputDir + "/" + getAlbumListFileNameByOffset(offset),
+    {
+      albums: albumList,
+      info: {
+        albumList: albumList.slice(offset, offset + config.albumsPerPage),
+        prevUrl: makeAlbumListPageUrl(getAlbumListFileNameByOffset(offset - config.albumsPerPage)),
+        nextUrl: makeAlbumListPageUrl(getAlbumListFileNameByOffset(offset + config.albumsPerPage, albumList.length))
+      },
+      tags: tags,
+      page: {
+        title: "Album List",
+        enableTagListOnSidebar: true
       }
     });
+  generating.on('ok', function(page) {
+    if ((offset + config.albumsPerPage) < albumList.length) {
+      generateAlbumListSinglePage(albumList, tags, offset + config.albumsPerPage, emitter);
+    } else {
+      emitter.emit('ok');
+    }
   });
   generating.on('error', function(e) {
-    e.emit('error', e);
-  });
+    emitter.emit('error', e);
+  });  
+}
 
+function generateAlbumListPage(albumList, tags) {
+  var e = new EventEmitter();
+  generateAlbumListSinglePage(albumList, tags, 0, e);
   return e;
 }
 

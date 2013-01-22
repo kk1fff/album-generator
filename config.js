@@ -33,7 +33,8 @@ function modifyConfig(data) {
     templateDir: __dirname + data.templateDir,
     albumThumbnailName: data.albumThumbnailName,
     photoThumbnailName: data.photoThumbnailName,
-    littleThumbnailName: data.littleThumbnailName
+    littleThumbnailName: data.littleThumbnailName,
+    albumsPerPage: data.albumsPerPage
   };
 };
 

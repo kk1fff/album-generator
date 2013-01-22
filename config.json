@@ -39,5 +39,6 @@
   "photoThumbnailName" : "thumbnail-170s.png",
   "photoName"      : "photo.jpg",
   "googleanalystics": "",
-  "disqus"         : ""
+  "disqus"         : "",
+  "albumsPerPage"  : 4
 }

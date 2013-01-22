@@ -2,7 +2,7 @@
 <div class="navigation-bar"><a href="<%= site.main %>"><%= site.title %></a></div>
 <div class="content-container">
 <div class="content-area">
-<% albums.forEach(function(a) { %>
+<% info.albumList.forEach(function(a) { %>
 <div class="album-row image-link" to="<%= a.albumUrl %>">
   <div class="image-container"><img src="<%= a.thumbnailUrl %>" class="album-list-cover"/></div>
   <div class="describe-container">
@@ -12,6 +12,8 @@
   </div>
 </div>
 <% }) %>
+<div class="navigation-bar"><% if (info.prevUrl) { %> <a href="<%= info.prevUrl %>">&lt;&lt; Previous Page</a> <% } %>
+<% if (info.nextUrl) { %> <a href="<%= info.nextUrl %>">Next Page &gt;&gt;</a> <% } %></div>
 </div>
 <%! sidebar.html %>
 <div class="clear-fix"></div>

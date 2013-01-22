@@ -4,7 +4,8 @@
   "dependencies": {
     "express": "3.0.x",
     "underscore": "1.4.3",
-    "mkdirp": "0.3.x"
+    "mkdirp": "0.3.x",
+    "wrench": "latest"
   },
   "engines": {
     "node": "0.8.x",

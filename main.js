@@ -15,6 +15,7 @@
 var fs             = require('fs'),
     EventEmitter   = require('events').EventEmitter,
     mkdirp         = require('mkdirp'),
+    wrench         = require('wrench'),
     AlbumProcessor = require('./albums.js'),
     config         = require('./config.js').getConfig();
 
@@ -114,10 +115,29 @@ function deployJs() {
 function prepareDirectory() {
   var e = new EventEmitter();
 
+  function copyResource() {
+    wrench.rmdirRecursive(config.outputDir + '/res', function(err) {
+      if (err && err.code != 'ENOENT') {
+        console.error("Cannot remove old res folder: " + err);
+        e.emit('error', err);
+      } else {
+        wrench.copyDirRecursive(__dirname + '/res', config.outputDir + '/res', function(err) {
+          if (err && err.code != 'ENOENT') {
+            console.error("Cannot deploy res folder: " + err);
+            e.emit('error', err);
+            return;
+          } 
+
+          e.emit('ok');
+        });
+      }
+    });
+  }
+
   function toDeployJs() {
     var ee = deployJs();
     ee.on('ok', function() {
-      e.emit('ok');
+      copyResource();
     });
 
     ee.on('error', function(err) {

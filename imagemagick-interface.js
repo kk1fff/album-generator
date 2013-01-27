@@ -27,7 +27,7 @@ function getResizingCommand(fromFile, toFile, size, isThumbnail, isSquare) {
     params.push("-resize " + size + "x" + size + resizingPostFix);
     params.push("-strip");
     if (isJpeg) {
-      params.push("-quality 60");
+      params.push("-quality 80");
     }
   }
 

@@ -40,5 +40,6 @@
   "photoName"      : "photo.jpg",
   "googleanalystics": "",
   "disqus"         : "",
-  "albumsPerPage"  : 4
+  "albumsPerPage"  : 4,
+  "facebookapp"    : ""
 }

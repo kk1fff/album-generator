@@ -9,6 +9,21 @@
   </div>
   Tags of this photo <% photo.getTags().forEach(function(t) { %><span class="tag"><a href="<%= t.tagUrl %>"><%= t.title %></a></span><% }); %>
   <% if (photo.desc && photo.desc.length>0) { %><div class="photo-description description-container"><%= photo.desc %></div><% } %>
+  <% if (site.facebookapp && site.facebookapp.length > 0) { %>
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=<%= site.facebookapp %>";
+    fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+  <script>
+    document.write("<div class=\"fb-comments\" data-href=\"" +
+                         location.href.split("#")[0] +
+                         "\" data-width=\"700\" data-num-posts=\"5\"></div>");
+  </script>
+  <% } %>
   <% if (site.disqus && site.disqus.length > 0) { %>
   <div class="disqus-container">
     <div id="disqus_thread"></div>

@@ -39,7 +39,8 @@ function getPageProperties() {
       js: [ config.httpPrefix + "/js/album.js" ],
       googleanalystics: config.googleanalystics,
       main: config.httpPrefix + "/",
-      disqus: config.disqus
+      disqus: config.disqus,
+      facebookapp: config.facebookapp
     }
   };
 }

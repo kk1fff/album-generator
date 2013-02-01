@@ -34,7 +34,8 @@ function modifyConfig(data) {
     albumThumbnailName: data.albumThumbnailName,
     photoThumbnailName: data.photoThumbnailName,
     littleThumbnailName: data.littleThumbnailName,
-    albumsPerPage: data.albumsPerPage
+    albumsPerPage: data.albumsPerPage,
+    facebookapp: data.facebookapp
   };
 };
 

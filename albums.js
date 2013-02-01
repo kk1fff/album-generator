@@ -63,6 +63,7 @@ function processAlbum(albumPath) {
         albumName:        getAlbumName(albumConfig),
         photoFileName:    photo.file,
         photoTitle:       photo.title,
+        tags:             (photo.tags || []).concat(albumConfig.tags || []),
         photoDescription: photo.desc
       });
       var ee = pprocessor.processPhotoPage();

@@ -10,6 +10,8 @@ cat<<EOF > album.json
   "desc": "",
   "name": "_$TIMESTAMP",
   "sortcode": $TIMESTAMP,
+  "tags": [],
+  "cover": 0,
   "photos": [
 EOF
 
@@ -22,7 +24,8 @@ cat<<EOF >> album.json
     {
       "file": "$i",
       "title": "",
-      "desc": ""
+      "desc": "",
+      "tags": []
     }
 EOF
 done

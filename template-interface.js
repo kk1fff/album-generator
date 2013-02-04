@@ -30,6 +30,7 @@ var STATE_BUILDING_PAGE = 4;
 var RESULT_OK = 0;
 var RESULT_ERROR = 1;
 var RESULT_PROCESS_PAGE = 2;
+var RESULT_GOT_CACHED_TEMPLATE = 3;
 
 function getPageProperties() {
   return {

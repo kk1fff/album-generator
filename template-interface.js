@@ -122,21 +122,19 @@ PageGenerator.prototype = {
   },
 
   _getTemplateRawFile: function _getTemplateRawFile() {
-    var cached = cachedTemplate[this.templateName],
-        self = this;
+    var cached = cachedTemplate[this.templateName];
     if (cached) {
       this.preprocessedTemplate = cached;
       this.onOperationDone(RESULT_GOT_CACHED_TEMPLATE);
     } else {
-      fs.readFile(config.templateDir + "/" + this.templateName,
-                  'utf8', function(err, d) {
-        if (err) {
-          self.onOperationDone(RESULT_ERROR, err);
-        } else {
-          self.rawTemplate = d;
-          self.onOperationDone(RESULT_OK);
-        }
-      });
+      try {
+        this.rawTemplate =
+          fs.readFileSync(config.templateDir + "/" + this.templateName, 'utf8');
+      } catch (err) {
+        this.onOperationDone(RESULT_ERROR, err);
+        return;
+      }
+      this.onOperationDone(RESULT_OK);
     };
   },
 

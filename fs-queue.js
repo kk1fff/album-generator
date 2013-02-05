@@ -53,6 +53,8 @@ function getFileHash(hash, path, callback) {
   });
   stream.on('end', function() {
     stream.destroy();
+  });
+  stream.on('close', function() {
     callback(null, hash);
   });
 }

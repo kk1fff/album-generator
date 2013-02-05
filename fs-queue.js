@@ -47,11 +47,12 @@ function fsQueueAdd(queuedItem) {
 }
 
 function getFileHash(hash, path, callback) {
-  var ee = fs.createReadStream(path);
-  ee.on('data', function(d) {
+  var stream = fs.createReadStream(path);
+  stream.on('data', function(d) {
     hash.update(d);
   });
-  ee.on('end', function() {
+  stream.on('end', function() {
+    stream.destroy();
     callback(null, hash);
   });
 }

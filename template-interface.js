@@ -15,7 +15,7 @@
 var EventEmitter = require('events').EventEmitter,
     fs           = require('fs'),
     _            = require('underscore'),
-    fsQueue      = require('./fs-queue.js'),
+    fsQueue      = require('./fs-sync.js'),
     config       = require('./config.js').getConfig(),
     cachedTemplate = {},
     cachedPageParts = {},
@@ -110,7 +110,8 @@ PageGenerator.prototype = {
       this.resultPage = template(this.pageData);
       this.onOperationDone(RESULT_OK);
     } catch (e) {
-      console.error("Error when building template: " + this.templateName);
+      throw e;
+      console.error("Error when building template: " + this.templateName + ", " + e);
       this.onOperationDone(RESULT_ERROR, e);
     }
   },

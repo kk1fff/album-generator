@@ -13,7 +13,7 @@
 // limitations under the License.
 var EventEmitter   = require('events').EventEmitter,
     fs             = require('fs'),
-    fsQueue        = require('./fs-queue.js'),
+    fsQueue        = require('./fs-sync.js'),
     fileOperator   = require('./file-operator.js'),
     template       = require('./template-interface.js'),
     PhotoProcessor = require('./photoprocessor.js'),

@@ -19,6 +19,9 @@
     fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));</script>
   <script>
+    document.write("<div class=\"fb-like\" data-href=\"" + 
+                         location.href.split("#")[0] +
+                         "\" data-send=\"false\" data-width=\"700\" data-show-faces=\"true\"></div>");
     document.write("<div class=\"fb-comments\" data-href=\"" +
                          location.href.split("#")[0] +
                          "\" data-width=\"700\" data-num-posts=\"5\"></div>");

@@ -19,6 +19,7 @@ var EventEmitter = require('events').EventEmitter,
 function modifyConfig(data) {
   return {
     albumFileName: data.albumFileName,
+    albumCachedFileName: data.albumCachedFileName,
     cssSourceDir: __dirname + data.cssSourceDir,
     disqus: data.disqus,
     googleanalystics: data.googleanalystics,

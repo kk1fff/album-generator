@@ -24,20 +24,30 @@ function processAlbum(albumPath) {
   var realAlbum = {};
   var e = new EventEmitter();
 
-  function loadAlbum(albumConfig) {
+  function loadAlbum(albumConfig, cachedConfig) {
     // Process photos:
     //  1. Generate new file name of the photo, "photo-" and the sha1 hash of
     //     original photo file plus title and desc.
     //  2. Record the new name and original description into realAlbum.photos.
     //  3. After all photos are processed, emit 'ok' event with the processed
     //     album info.
+    //  4. Record the processed info for cache.
     realAlbum.photos = [];
     var processingPhoto = 0;
     var photoMap = [];
 
+    if (!cachedConfig) {
+      cachedConfig = {
+        hash: {},
+        rawExif: {}
+      };
+    }
+
     function onProcessedOnePhoto(success, photo, originalIndex, photoInfo) {
       processingPhoto--;
       if (success) {
+        cachedConfig.hash[photo.file] = photoInfo.getHash(); // Record processed photo.
+        cachedConfig.rawExif[photo.file] = photoInfo.getRawExif();
         photoInfo.inputFileName = photo.file;
         realAlbum.photos[originalIndex] = photoInfo;
       }
@@ -48,6 +58,8 @@ function processAlbum(albumPath) {
         realAlbum.cover = photoMap[albumConfig.cover || 0];
         realAlbum.name = albumConfig.name;
         realAlbum.sortcode = albumConfig.sortcode || -1;
+        // Store cached
+        fs.writeFileSync(albumPath + '/' + config.albumCachedFileName,  JSON.stringify(cachedConfig), 'utf8');
         e.emit('ok', realAlbum);
       }
     }
@@ -64,7 +76,9 @@ function processAlbum(albumPath) {
         photoFileName:    photo.file,
         photoTitle:       photo.title,
         tags:             (photo.tags || []).concat(albumConfig.tags || []),
-        photoDescription: photo.desc
+        photoDescription: photo.desc,
+        cachedHash:       cachedConfig.hash[photo.file],
+        cachedRawExif:    cachedConfig.rawExif[photo.file]
       });
       var ee = pprocessor.processPhotoPage();
       ee.on('ok', function(photoInfo) {
@@ -78,13 +92,20 @@ function processAlbum(albumPath) {
     });
   }
 
-  fs.readFile(albumPath + '/' + config.albumFileName, 'utf8', function(err, data) {
-    if (err) {
-      e.emit('error', err);
-      return;
-    }
-    loadAlbum(JSON.parse(data));
-  });
+  var albumJsonData, albumCachedJson;
+  try {
+    albumJsonData = fs.readFileSync(albumPath + '/' + config.albumFileName, 'utf8');
+  } catch (err) {
+    e.emit('error', err);
+  }
+
+  try {
+    albumCachedJson = fs.readFileSync(albumPath + '/' + config.albumCachedFileName, 'utf8');
+  } catch (err) {
+    // Throw away...
+  }
+  loadAlbum(JSON.parse(albumJsonData),
+            albumCachedJson ? JSON.parse(albumCachedJson) : null);
 
   return e;
 };

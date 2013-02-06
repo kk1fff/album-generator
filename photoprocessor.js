@@ -48,10 +48,12 @@ var RESULT_FILE_READY         = 2;
 var RESULT_PROCESS_PHOTO      = 3;
 var RESULT_PROCESS_PHOTO_PAGE = 4;
 
-function Photo(sourcePath, sourcePhoto) {
+function Photo(sourcePath, sourcePhoto, hash, rawExif) {
   this.sourcePhotoPathName = sourcePath + "/" + sourcePhoto;
   this.sourcePhoto = sourcePhoto;
   this.state = STATE_AVAILABLE;
+  this.hash = hash;
+  this.rawExif = rawExif;
 }
 
 Photo.prototype = {
@@ -115,6 +117,13 @@ Photo.prototype = {
         sha1 = crypto.createHash('sha1'),
         gettingHash;
 
+    if (this.hash) {
+      this.name = "photo-" + this.hash;
+      this.photoDir = config.outputDir + '/' + this.name;
+      this.onOperationDone(RESULT_OK);
+      return;
+    }
+
     gettingHash = fsQueue.getHash(sha1, this.sourcePhotoPathName);
     gettingHash.on('ok', function(hash) {
       self.hash = hash.digest('hex');
@@ -130,10 +139,22 @@ Photo.prototype = {
 
   _doGetExif: function _doGetExif() {
     var self = this,
-        ee = ei.getExif(this.sourcePhotoPathName);
-    ee.on('ok', function(exif, tags) {
+        ee;
+
+    if (this.rawExif) {
+      // If raw exif is cached, we don't need to parse exif again.
+      var formattedExif = ei.formatExifToJson(this.rawExif);
+      self.exif = formattedExif[0];
+      self.tags = formattedExif[1];
+      self.onOperationDone(RESULT_OK);
+      return;
+    }
+
+    ee = ei.getExif(this.sourcePhotoPathName);
+    ee.on('ok', function(exif, tags, rawExif) {
       self.exif = exif;
       self.tags = tags;
+      self.rawExif = rawExif;
       self.onOperationDone(RESULT_OK);
     });
 
@@ -216,6 +237,8 @@ function PhotoPage(photoInfo) {
   this.albumName = photoInfo.albumName;
   this.tags = photoInfo.tags || [];
   this.state = STATE_AVAILABLE;
+  this.cachedHash = photoInfo.cachedHash;
+  this.cachedRawExif = photoInfo.cachedRawExif;
 }
 
 PhotoPage.prototype = {
@@ -265,14 +288,26 @@ PhotoPage.prototype = {
     return tagging.getSimpleProperties(this.tags);
   },
 
+  getHash: function getHash() {
+    return this._photoHash;
+  },
+
+  getRawExif: function getRawExif() {
+    return this._photoRawExif;
+  },
+
   _doProcessPhoto: function _doProcessPhoto() {
-    var photo = new Photo(this.sourcePath, this.originalFileName),
+    var photo = new Photo(this.sourcePath,
+                          this.originalFileName,
+                          this.cachedHash,
+                          this.cachedRawExif),
         ee = photo.processPhoto(),
         self = this;
     ee.on('ok', function() {
       // Photo is generated, copy photo's file information.
       self._photoName = photo.name;
       self._photoHash = photo.hash;
+      self._photoRawExif = photo.rawExif;
       self.exif = photo.exif;
       self.tags = self.tags.concat(photo.tags);
       self.onOperationDone(RESULT_OK);

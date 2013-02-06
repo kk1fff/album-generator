@@ -40,7 +40,7 @@ var taggedEntry = {
   "Camera Model Name": true,
   "Lens": true,
   "Lens ID": true
-}
+};
 
 function formatExifToJson(txt) {
   var lineArray = txt.split('\n');
@@ -60,7 +60,9 @@ function formatExifToJson(txt) {
     }
   });
   return [exif, tags];
-}
+};
+
+exports.formatExifToJson = formatExifToJson;
 
 exports.getExif = function getExif(fromFile) {
   var e = new EventEmitter();
@@ -71,8 +73,10 @@ exports.getExif = function getExif(fromFile) {
            e.emit('error', error);
          } else {
            var formattedExif = formatExifToJson(stdout);
-           e.emit('ok', formattedExif[0] /* EXIF data */,
-                  formattedExif[1] /* Tags */);
+           e.emit('ok',
+                  formattedExif[0], /* EXIF data */
+                  formattedExif[1], /* Tags */
+                  stdout /* raw exif */);
          }
        });
   return e;

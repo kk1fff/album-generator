@@ -230,7 +230,8 @@ function generateAlbumPage(albumList, albumInfo, tags) {
           title: albumInfo.title,
           desc: albumInfo.desc,
           enableAlbumListOnSidebar: true,
-          enableTagListOnSidebar: true
+          enableTagListOnSidebar: true,
+          titleImage: albumInfo.thumbnailUrl
         }
       }),
       e = new EventEmitter();

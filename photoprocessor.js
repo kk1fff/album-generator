@@ -394,7 +394,8 @@ PhotoPage.prototype = {
           title: this.title,
           desc: this.desc,
           enableTagListOnSidebar: true,
-          enableAlbumListOnSidebar: true
+          enableAlbumListOnSidebar: true,
+          titleImage: this.thumbnailUrl()
         }
       }),
         emitter = new EventEmitter();

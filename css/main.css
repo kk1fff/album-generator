@@ -1,3 +1,6 @@
+html {
+}
+
 #main-container {
     margin: 0 auto;
     max-width: 1000px;
@@ -7,12 +10,12 @@
 }
 
 a, a:visited {
-    color: blue;
+    color: #c0c0c0;
     text-decoration: none;
 }
 
 .header {
-    background-color: #444;
+    background-color: black;
     display: block;
     width: 100%;
     overflow: hidden;
@@ -34,8 +37,22 @@ a, a:visited {
 }
 
 body {
-    background-color: white;
     overflow-x: hidden;
+    color: #f0f0f0;
+}
+
+body .background {
+    background: radial-gradient(50% 0, ellipse farthest-corner, #808080 0%, #000000 95%);
+    background: -webkit-radial-gradient(50% 0, ellipse farthest-corner, #808080 0%, #000000 95%);
+    background: -moz-radial-gradient(50% 0, farthest-corner, #808080 0%, #000000 95%);
+    z-index: -999;
+    min-height: 100%;
+    min-width: 1024px;
+    width: 100%;
+    height: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 h1 {
@@ -78,7 +95,7 @@ h2 {
 }
 
 .image-link:hover {
-    background-color: #ceeef5;
+    background-color: rgba(255, 255, 255, 0.1);
     cursor: pointer;
 }
 
@@ -91,7 +108,6 @@ h2 {
 .navigation-bar {
     font-size: 14px;
     margin: 0 0 10px 0;
-    background-color: #eee;
 }
 
 .navigation-bar, .navigation-bar a, .navigation-bar a:visited {
@@ -104,11 +120,11 @@ h2 {
 }
 
 .navigation-bar a {
-    border-right: 2px #fff solid;
+    border-right: 2px #ccc solid;
 }
 
 .navigation-bar .title {
-    color: #333;
+    color: #ddd;
 }
 
 .navigation-bar a:hover {
@@ -185,12 +201,15 @@ h2 {
 }
 
 .album-row .album-title:before {
-    content: "# ";
+    content: "- ";
 }
 
 .album-list-cover {
     display: block;
     vertical-align: middle;
+    border-radius: 5px; 
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px;
 }
 
 /* Albums */
@@ -208,10 +227,15 @@ h2 {
     float: none;
     text-align: left;
     position: relative;
-    width: 170px;
-    height: 170px;
+    width: 168px;
+    height: 168px;
     top: 0;
     left: 0;
+    border-radius: 5px; 
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px;
+    border: 1px #333 solid;
+    overflow: hidden;
 }
 
 .photo-row .photo-title-container {
@@ -221,7 +245,7 @@ h2 {
     position: absolute;
     bottom: 0;
     left: 0;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(0, 0, 0, 0.3);
     width: 100%;
 }
 
@@ -229,7 +253,7 @@ h2 {
     padding: 2px;
 }
 .photo-row:hover .photo-title-container {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 

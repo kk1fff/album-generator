@@ -61,6 +61,11 @@ function generateTagList() {
       tagUrl: getTagUrl(tag)
     });
   });
+
+  ret.sort(function (a, b) {
+    return a.title < b.title ? -1 : 1;
+  });
+
   return ret;
 }
 

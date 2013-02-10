@@ -42,7 +42,7 @@ window.addEventListener('load', function() {
     location.href = $(evt.delegateTarget).attr('to');
   });
   initPendingImageContainers();
+  window.addEventListener('scroll', loadImageForShownContainer);
   loadImageForShownContainer();
 });
 
-window.addEventListener('scroll', loadImageForShownContainer);

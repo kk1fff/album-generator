@@ -1,11 +1,11 @@
-var express = require('express');
-var app = express();
+var express = require('express'),
+    morgan = require('morgan'),
+    app = express();
 
-app.use(express.logger());
+app.use(morgan('combined'));
 app.use(express.static(__dirname + '/output'));
 app.use("/", express.static(__dirname + '/output/index.html'));
 
 var port = process.env.PORT || 5000;
-app.listen(port, function() {
-  console.log("Listening on " + port);
-});
+app.listen(port);
+console.log("Listening on " + port);
